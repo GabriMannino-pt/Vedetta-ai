@@ -56,23 +56,31 @@ npm run scout
 
 ## 🔑 Come ottenere le credenziali
 
-### Reddit API
+### Google Custom Search (per Reddit)
 
-1. Vai su [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps)
-2. Clicca **"create another app..."**
-3. Scegli tipo **"script"**
-4. Nome: `Vedetta` (o quello che vuoi)
-5. Redirect URI: `http://localhost:8080` (non verrà usato)
-6. Copia **client ID** (sotto il nome dell'app) e **client secret**
-7. Inserisci nel `.env`:
-   ```
-   REDDIT_CLIENT_ID=il_tuo_client_id
-   REDDIT_CLIENT_SECRET=il_tuo_client_secret
-   REDDIT_USERNAME=il_tuo_username_reddit
-   REDDIT_PASSWORD=la_tua_password_reddit
-   ```
+Poiché l'API Reddit richiede approvazione manuale (dal 2025), Vedetta usa Google Custom Search per trovare post Reddit. Gratis fino a 100 query/giorno.
 
-> **Nota:** Username e password sono opzionali. Senza di essi il sistema usa `client_credentials` grant (accesso read-only limitato). Con il password grant hai accesso più ampio.
+**Passo 1 — API Key Google:**
+1. Vai su [console.cloud.google.com](https://console.cloud.google.com)
+2. Crea un progetto (o selezionane uno esistente)
+3. Vai su **API e servizi → Libreria** e abilita **"Custom Search API"**
+4. Vai su **API e servizi → Credenziali** e clicca **"Crea credenziali" → "Chiave API"**
+5. Copia la chiave
+
+**Passo 2 — Search Engine ID:**
+1. Vai su [programmablesearchengine.google.com](https://programmablesearchengine.google.com)
+2. Clicca **"Aggiungi"** per creare un nuovo motore di ricerca
+3. In **"Siti da cercare"** inserisci: `reddit.com`
+4. Dai un nome (es. "Vedetta Reddit")
+5. Clicca **"Crea"** e copia il **Search Engine ID** ("cx")
+
+**Passo 3 — Inserisci nel `.env`:**
+```
+GOOGLE_CSE_API_KEY=la_tua_api_key
+GOOGLE_CSE_ID=il_tuo_search_engine_id
+```
+
+> **Nota:** Il free tier offre 100 query/giorno, ampiamente sufficienti per Vedetta.
 
 ### Upwork API
 
@@ -117,9 +125,9 @@ Modifica `config.json` per personalizzare il comportamento:
 
 | Campo | Descrizione |
 |---|---|
-| `reddit.subreddits` | Lista dei subreddit da monitorare |
-| `reddit.maxPostAgeDays` | Età massima dei post da considerare (giorni) |
-| `reddit.postsPerSubreddit` | Numero max di post per subreddit |
+| `reddit.searchQueries` | Query di ricerca Google CSE (con `site:reddit.com`) |
+| `reddit.resultsPerQuery` | Numero max di risultati per query (max 10) |
+| `reddit.maxPostAgeDays` | Età massima dei risultati (giorni) |
 | `upwork.keywords` | Keyword di ricerca su Upwork |
 | `scoring.minIntentScore` | Punteggio minimo per includere nel report (0-10) |
 | `scoring.geminiModel` | Modello Gemini da usare (es. `gemini-2.0-flash`) |

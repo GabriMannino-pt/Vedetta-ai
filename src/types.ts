@@ -49,9 +49,9 @@ export interface Lead {
 /** Configurazione caricata da config.json */
 export interface AppConfig {
   reddit: {
-    subreddits: string[];
+    searchQueries: string[];
+    resultsPerQuery: number;
     maxPostAgeDays: number;
-    postsPerSubreddit: number;
   };
   upwork: {
     keywords: string[];

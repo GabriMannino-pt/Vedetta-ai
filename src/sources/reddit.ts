@@ -1,133 +1,117 @@
 import axios from 'axios';
 import { RawPost } from '../types';
-import { appConfig, requireEnv, optionalEnv } from '../config';
+import { appConfig, requireEnv } from '../config';
 
-const REDDIT_TOKEN_URL = 'https://www.reddit.com/api/v1/access_token';
-const REDDIT_API_BASE = 'https://oauth.reddit.com';
-
-let cachedToken: string | null = null;
-let tokenExpiresAt = 0;
+const GOOGLE_CSE_URL = 'https://www.googleapis.com/customsearch/v1';
 
 /**
- * Ottiene un access token Reddit via OAuth2 (client_credentials o password grant).
- * Se username e password sono configurati, usa il password grant per accesso completo;
- * altrimenti usa client_credentials per accesso read-only.
- */
-async function getRedditToken(): Promise<string> {
-  if (cachedToken && Date.now() < tokenExpiresAt) {
-    return cachedToken;
-  }
-
-  const clientId = requireEnv('REDDIT_CLIENT_ID');
-  const clientSecret = requireEnv('REDDIT_CLIENT_SECRET');
-  const username = optionalEnv('REDDIT_USERNAME');
-  const password = optionalEnv('REDDIT_PASSWORD');
-
-  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
-  let body: string;
-  if (username && password) {
-    body = `grant_type=password&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-  } else {
-    body = 'grant_type=client_credentials';
-  }
-
-  const res = await axios.post(REDDIT_TOKEN_URL, body, {
-    headers: {
-      Authorization: `Basic ${auth}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Vedetta/1.0.0',
-    },
-  });
-
-  cachedToken = res.data.access_token;
-  // Token Reddit durano ~2 ore, rinnova con 5 minuti di margine
-  tokenExpiresAt = Date.now() + (res.data.expires_in - 300) * 1000;
-  return cachedToken!;
-}
-
-/**
- * Fetch dei post recenti da un singolo subreddit.
- * Filtra quelli più vecchi di maxPostAgeDays.
- */
-async function fetchSubreddit(subreddit: string): Promise<RawPost[]> {
-  const token = await getRedditToken();
-  const limit = appConfig.reddit.postsPerSubreddit;
-  const maxAgeMs = appConfig.reddit.maxPostAgeDays * 24 * 60 * 60 * 1000;
-  const cutoff = Date.now() - maxAgeMs;
-
-  try {
-    const res = await axios.get(`${REDDIT_API_BASE}/r/${subreddit}/new.json`, {
-      params: { limit, raw_json: 1 },
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'User-Agent': 'Vedetta/1.0.0',
-      },
-    });
-
-    // Rispetta i rate limit di Reddit
-    const remaining = res.headers['x-ratelimit-remaining'];
-    const resetSeconds = res.headers['x-ratelimit-reset'];
-    if (remaining !== undefined && Number(remaining) < 5) {
-      const waitMs = (Number(resetSeconds) + 1) * 1000;
-      console.warn(`[REDDIT] ⚠️  Rate limit basso (${remaining} rimanenti), attendo ${Math.round(waitMs / 1000)}s`);
-      await sleep(waitMs);
-    }
-
-    const posts: RawPost[] = [];
-    for (const child of res.data.data.children) {
-      const d = child.data;
-      const createdMs = d.created_utc * 1000;
-
-      if (createdMs < cutoff) continue;
-
-      posts.push({
-        source: 'reddit',
-        id: d.id,
-        url: `https://www.reddit.com${d.permalink}`,
-        title: d.title || '',
-        body: d.selftext || '',
-        author: d.author || '[deleted]',
-        createdAt: new Date(createdMs),
-        subreddit: d.subreddit,
-      });
-    }
-
-    return posts;
-  } catch (err: any) {
-    const status = err?.response?.status;
-    if (status === 429) {
-      console.warn(`[REDDIT] ⚠️  Rate limited su r/${subreddit}, skip`);
-    } else if (status === 403) {
-      console.warn(`[REDDIT] ⚠️  r/${subreddit} non accessibile (403), skip`);
-    } else {
-      console.error(`[REDDIT] ❌ Errore fetching r/${subreddit}:`, err.message);
-    }
-    return [];
-  }
-}
-
-/**
- * Fetch di tutti i post recenti dai subreddit configurati.
- * Se un subreddit fallisce, continua con gli altri.
+ * Cerca post Reddit tramite Google Custom Search API.
+ *
+ * Vantaggi rispetto all'API Reddit diretta:
+ * - Nessuna approvazione necessaria
+ * - Gratis fino a 100 query/giorno
+ * - Filtra automaticamente per rilevanza (ranking Google)
+ *
+ * Limitazioni:
+ * - Non cattura post recentissimi (< qualche ora dall'indicizzazione)
+ * - Limite 100 query/giorno nel free tier
  */
 export async function fetchRedditPosts(): Promise<RawPost[]> {
-  const subreddits = appConfig.reddit.subreddits;
-  console.log(`[REDDIT] 🔍 Scanning ${subreddits.length} subreddit...`);
+  let apiKey: string;
+  let searchEngineId: string;
 
-  const allPosts: RawPost[] = [];
-
-  for (const sub of subreddits) {
-    const posts = await fetchSubreddit(sub);
-    console.log(`[REDDIT]   r/${sub}: ${posts.length} post recenti`);
-    allPosts.push(...posts);
-
-    // Piccola pausa tra subreddit per non sovraccaricare l'API
-    await sleep(500);
+  try {
+    apiKey = requireEnv('GOOGLE_CSE_API_KEY');
+    searchEngineId = requireEnv('GOOGLE_CSE_ID');
+  } catch {
+    console.warn('[REDDIT] ⚠️  GOOGLE_CSE_API_KEY o GOOGLE_CSE_ID non configurati, skip sorgente Reddit');
+    return [];
   }
 
-  console.log(`[REDDIT] ✅ Totale post raccolti: ${allPosts.length}`);
+  const queries = appConfig.reddit.searchQueries;
+  const resultsPerQuery = appConfig.reddit.resultsPerQuery;
+  console.log(`[REDDIT] 🔍 Ricerca su Reddit via Google CSE (${queries.length} query)...`);
+
+  const allPosts: RawPost[] = [];
+  const seenUrls = new Set<string>();
+
+  for (const query of queries) {
+    try {
+      // dateRestrict limita ai risultati degli ultimi N giorni
+      const dateRestrict = `d${appConfig.reddit.maxPostAgeDays}`;
+
+      const res = await axios.get(GOOGLE_CSE_URL, {
+        params: {
+          key: apiKey,
+          cx: searchEngineId,
+          q: query,
+          num: Math.min(resultsPerQuery, 10), // Google CSE max 10 per richiesta
+          dateRestrict,
+        },
+      });
+
+      const items = res.data.items || [];
+
+      for (const item of items) {
+        const url = item.link;
+        if (!url || seenUrls.has(url)) continue;
+
+        // Filtra solo post Reddit (non pagine di subreddit, wiki, ecc.)
+        if (!isRedditPost(url)) continue;
+
+        seenUrls.add(url);
+
+        const subreddit = extractSubreddit(url);
+
+        allPosts.push({
+          source: 'reddit',
+          id: extractRedditId(url) || url,
+          url,
+          title: item.title || '',
+          body: item.snippet || '',
+          author: 'via Google CSE',
+          createdAt: new Date(), // Google CSE non fornisce data esatta del post
+          subreddit,
+        });
+      }
+
+      console.log(`[REDDIT]   "${query}": ${items.length} risultati`);
+
+      // Pausa tra query per rispettare rate limit
+      await sleep(300);
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 429) {
+        console.warn('[REDDIT] ⚠️  Quota giornaliera Google CSE esaurita (100/giorno), stop ricerche');
+        break;
+      } else if (status === 403) {
+        console.error('[REDDIT] ❌ API key Google non valida o CSE non configurato');
+        return allPosts;
+      } else {
+        console.error(`[REDDIT] ❌ Errore per query "${query}":`, err.message);
+      }
+    }
+  }
+
+  console.log(`[REDDIT] ✅ Totale post Reddit trovati: ${allPosts.length}`);
   return allPosts;
+}
+
+/** Controlla se l'URL è un post Reddit (non una pagina di subreddit o wiki) */
+function isRedditPost(url: string): boolean {
+  return /reddit\.com\/r\/\w+\/comments\//.test(url);
+}
+
+/** Estrae il nome del subreddit dall'URL */
+function extractSubreddit(url: string): string | undefined {
+  const match = url.match(/reddit\.com\/r\/(\w+)\//);
+  return match ? match[1] : undefined;
+}
+
+/** Estrae l'ID del post Reddit dall'URL */
+function extractRedditId(url: string): string | undefined {
+  const match = url.match(/\/comments\/(\w+)\//);
+  return match ? match[1] : undefined;
 }
 
 function sleep(ms: number): Promise<void> {

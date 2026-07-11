@@ -1,19 +1,17 @@
 {
   "reddit": {
-    "subreddits": [
-      "smallbusiness",
-      "Entrepreneur",
-      "SaaS",
-      "zapier",
-      "n8n",
-      "automation",
-      "nocode",
-      "webdev",
-      "digital_marketing",
-      "ecommerce"
+    "searchQueries": [
+      "site:reddit.com need help automating workflow",
+      "site:reddit.com looking for zapier n8n automation",
+      "site:reddit.com hire someone automate business process",
+      "site:reddit.com frustrated manual data entry automation",
+      "site:reddit.com need API integration between tools",
+      "site:reddit.com automate repetitive tasks small business",
+      "site:reddit.com looking for automation developer freelancer",
+      "site:reddit.com workflow automation recommendations budget"
     ],
-    "maxPostAgeDays": 2,
-    "postsPerSubreddit": 25
+    "resultsPerQuery": 10,
+    "maxPostAgeDays": 7
   },
   "upwork": {
     "keywords": [
