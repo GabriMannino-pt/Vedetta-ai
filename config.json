@@ -1,0 +1,40 @@
+{
+  "reddit": {
+    "subreddits": [
+      "smallbusiness",
+      "Entrepreneur",
+      "SaaS",
+      "zapier",
+      "n8n",
+      "automation",
+      "nocode",
+      "webdev",
+      "digital_marketing",
+      "ecommerce"
+    ],
+    "maxPostAgeDays": 2,
+    "postsPerSubreddit": 25
+  },
+  "upwork": {
+    "keywords": [
+      "automation",
+      "Zapier",
+      "n8n",
+      "workflow automation",
+      "API integration",
+      "process automation",
+      "Make.com",
+      "data integration"
+    ],
+    "maxResults": 50
+  },
+  "scoring": {
+    "minIntentScore": 6,
+    "claudeModel": "claude-sonnet-4-20250514",
+    "maxRetries": 2,
+    "delayBetweenCallsMs": 1500
+  },
+  "report": {
+    "maxLeadsInReport": 20
+  }
+}

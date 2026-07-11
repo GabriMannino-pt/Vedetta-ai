@@ -1,0 +1,26 @@
+{
+  "name": "vedetta-ai",
+  "version": "1.0.0",
+  "description": "Automated lead scouting system for B2B automation services. Monitors Reddit and Upwork for real buying intent.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "scout": "npm run build && npm start"
+  },
+  "keywords": ["lead-generation", "automation", "n8n", "zapier", "reddit", "upwork"],
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "axios": "^1.7.9",
+    "better-sqlite3": "^11.7.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}
