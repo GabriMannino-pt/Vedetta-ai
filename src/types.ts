@@ -13,7 +13,7 @@ export interface RawPost {
   upworkBudget?: string;    // solo per Upwork
 }
 
-/** Risultato dello scoring di Claude — struttura esatta del prompt */
+/** Risultato dello scoring — struttura esatta del prompt */
 export interface ScoringResult {
   e_opportunita: boolean;
   punteggio_intent: number;
@@ -59,7 +59,7 @@ export interface AppConfig {
   };
   scoring: {
     minIntentScore: number;
-    claudeModel: string;
+    geminiModel: string;
     maxRetries: number;
     delayBetweenCallsMs: number;
   };

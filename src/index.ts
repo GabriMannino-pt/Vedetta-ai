@@ -1,6 +1,6 @@
 import { fetchRedditPosts } from './sources/reddit';
 import { fetchUpworkJobs } from './sources/upwork';
-import { scorePost } from './scoring/claude';
+import { scorePost } from './scoring/gemini';
 import { initDb, isAlreadyProcessed, insertLead, markAsProcessed, closeDb, countLeads } from './storage/db';
 import { generateReport } from './report/generator';
 import { sendTelegramReport } from './report/sender';

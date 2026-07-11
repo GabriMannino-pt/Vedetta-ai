@@ -2,7 +2,7 @@
 
 **Sistema di lead scouting automatizzato per servizi di automazione B2B.**
 
-Vedetta monitora quotidianamente Reddit e Upwork per trovare post e job posting dove qualcuno esprime un dolore operativo risolvibile con automazione (n8n, Zapier, integrazioni AI, script custom). Ogni opportunità viene analizzata con Claude (Anthropic) e il sistema genera un report giornaliero via Telegram con le migliori, ognuna corredata da una bozza di risposta pronta.
+Vedetta monitora quotidianamente Reddit e Upwork per trovare post e job posting dove qualcuno esprime un dolore operativo risolvibile con automazione (n8n, Zapier, integrazioni AI, script custom). Ogni opportunità viene analizzata con Gemini (Google AI) e il sistema genera un report giornaliero via Telegram con le migliori, ognuna corredata da una bozza di risposta pronta.
 
 ---
 
@@ -10,7 +10,7 @@ Vedetta monitora quotidianamente Reddit e Upwork per trovare post e job posting 
 
 ```
 Reddit API ──┐
-              ├──▸ Deduplicazione ──▸ Claude Scoring ──▸ SQLite ──▸ Report ──▸ Telegram
+              ├──▸ Deduplicazione ──▸ Gemini Scoring ──▸ SQLite ──▸ Report ──▸ Telegram
 Upwork API ──┘
 ```
 
@@ -18,7 +18,7 @@ Upwork API ──┘
 
 - **Node.js** >= 18
 - **npm** >= 9
-- Account e API key per: Reddit, Upwork (opzionale), Anthropic, Telegram
+- Account e API key per: Reddit, Upwork (opzionale), Google Gemini (gratuito), Telegram
 
 ---
 
@@ -86,13 +86,13 @@ npm run scout
 
 > **Nota:** L'API Upwork è opzionale. Se non configurata, Vedetta funziona comunque solo con Reddit.
 
-### Anthropic (Claude)
+### Google Gemini (gratuito)
 
-1. Vai su [console.anthropic.com](https://console.anthropic.com/)
-2. Crea un account e genera una API key
+1. Vai su [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Clicca **"Create API Key"** — nessuna carta di credito richiesta
 3. Inserisci nel `.env`:
    ```
-   ANTHROPIC_API_KEY=sk-ant-...
+   GEMINI_API_KEY=AIza...
    ```
 
 ### Telegram Bot
@@ -122,8 +122,8 @@ Modifica `config.json` per personalizzare il comportamento:
 | `reddit.postsPerSubreddit` | Numero max di post per subreddit |
 | `upwork.keywords` | Keyword di ricerca su Upwork |
 | `scoring.minIntentScore` | Punteggio minimo per includere nel report (0-10) |
-| `scoring.claudeModel` | Modello Claude da usare |
-| `scoring.delayBetweenCallsMs` | Pausa tra chiamate API Claude (ms) |
+| `scoring.geminiModel` | Modello Gemini da usare (es. `gemini-2.0-flash`) |
+| `scoring.delayBetweenCallsMs` | Pausa tra chiamate API Gemini (ms) |
 | `report.maxLeadsInReport` | Numero massimo di lead per report |
 
 ---

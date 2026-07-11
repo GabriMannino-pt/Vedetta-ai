@@ -30,7 +30,7 @@
   },
   "scoring": {
     "minIntentScore": 6,
-    "claudeModel": "claude-sonnet-4-20250514",
+    "geminiModel": "gemini-2.0-flash",
     "maxRetries": 2,
     "delayBetweenCallsMs": 1500
   },

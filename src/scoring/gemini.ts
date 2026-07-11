@@ -1,14 +1,14 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { RawPost, ScoringResult } from '../types';
 import { appConfig, requireEnv } from '../config';
 
-let client: Anthropic | null = null;
+let genAI: GoogleGenerativeAI | null = null;
 
-function getClient(): Anthropic {
-  if (!client) {
-    client = new Anthropic({ apiKey: requireEnv('ANTHROPIC_API_KEY') });
+function getClient(): GoogleGenerativeAI {
+  if (!genAI) {
+    genAI = new GoogleGenerativeAI(requireEnv('GEMINI_API_KEY'));
   }
-  return client;
+  return genAI;
 }
 
 // ── Prompt esatto fornito dall'utente (NON modificare) ──────────────────────
@@ -56,16 +56,14 @@ SCARTA (e_opportunita: false) se:
 }
 
 /**
- * Tenta di estrarre un oggetto JSON valido dalla risposta di Claude,
+ * Tenta di estrarre un oggetto JSON valido dalla risposta di Gemini,
  * anche se contiene testo extra (code fences, spazi, etc.)
  */
 function parseJsonResponse(raw: string): ScoringResult {
-  // Rimuovi eventuale code fence ```json ... ```
   let cleaned = raw.trim();
   cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
   cleaned = cleaned.trim();
 
-  // Trova il primo { e l'ultimo }
   const start = cleaned.indexOf('{');
   const end = cleaned.lastIndexOf('}');
   if (start === -1 || end === -1) {
@@ -75,7 +73,6 @@ function parseJsonResponse(raw: string): ScoringResult {
   const jsonStr = cleaned.substring(start, end + 1);
   const parsed = JSON.parse(jsonStr);
 
-  // Validazione minima dei campi obbligatori
   if (typeof parsed.e_opportunita !== 'boolean' || typeof parsed.punteggio_intent !== 'number') {
     throw new Error('JSON valido ma manca e_opportunita o punteggio_intent');
   }
@@ -84,46 +81,50 @@ function parseJsonResponse(raw: string): ScoringResult {
 }
 
 /**
- * Analizza un singolo post con Claude e restituisce il risultato di scoring.
+ * Analizza un singolo post con Gemini e restituisce il risultato di scoring.
  * Retry automatico in caso di errore di parsing (max config.scoring.maxRetries tentativi).
  */
 export async function scorePost(post: RawPost): Promise<ScoringResult | null> {
-  const anthropic = getClient();
+  const client = getClient();
+  const model = client.getGenerativeModel({
+    model: appConfig.scoring.geminiModel,
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 1500,
+    },
+  });
   const prompt = buildPrompt(post);
   const maxRetries = appConfig.scoring.maxRetries;
 
   for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
     try {
-      const message = await anthropic.messages.create({
-        model: appConfig.scoring.claudeModel,
-        max_tokens: 1500,
-        messages: [{ role: 'user', content: prompt }],
-      });
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
 
-      const textBlock = message.content.find((b) => b.type === 'text');
-      if (!textBlock || textBlock.type !== 'text') {
-        throw new Error('Risposta Claude senza blocco testo');
+      if (!text) {
+        throw new Error('Risposta Gemini vuota');
       }
 
-      const result = parseJsonResponse(textBlock.text);
-      return result;
+      const parsed = parseJsonResponse(text);
+      return parsed;
     } catch (err: any) {
       const isLastAttempt = attempt === maxRetries + 1;
-      const isRateLimit = err?.status === 429;
+      const isRateLimit = err?.status === 429 || err?.message?.includes('429');
 
       if (isRateLimit) {
-        const waitMs = 30_000;
-        console.warn(`[CLAUDE] ⚠️  Rate limited, attendo ${waitMs / 1000}s...`);
+        const waitMs = 15_000; // Gemini free tier: 15 RPM
+        console.warn(`[GEMINI] ⚠️  Rate limited, attendo ${waitMs / 1000}s...`);
         await sleep(waitMs);
         continue;
       }
 
       if (isLastAttempt) {
-        console.error(`[CLAUDE] ❌ Scoring fallito per "${post.title.substring(0, 60)}..." dopo ${maxRetries + 1} tentativi:`, err.message);
+        console.error(`[GEMINI] ❌ Scoring fallito per "${post.title.substring(0, 60)}..." dopo ${maxRetries + 1} tentativi:`, err.message);
         return null;
       }
 
-      console.warn(`[CLAUDE] ⚠️  Tentativo ${attempt}/${maxRetries + 1} fallito, retry...`);
+      console.warn(`[GEMINI] ⚠️  Tentativo ${attempt}/${maxRetries + 1} fallito, retry...`);
       await sleep(2000);
     }
   }

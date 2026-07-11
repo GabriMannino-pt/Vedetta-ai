@@ -12,7 +12,7 @@
   "keywords": ["lead-generation", "automation", "n8n", "zapier", "reddit", "upwork"],
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@google/generative-ai": "^0.21.0",
     "axios": "^1.7.9",
     "better-sqlite3": "^11.7.0",
     "dotenv": "^16.4.7"
