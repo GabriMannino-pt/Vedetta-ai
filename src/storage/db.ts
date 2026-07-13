@@ -35,9 +35,17 @@ export function initDb(): void {
       evidenza_budget_dettaglio TEXT,
       urgenza          TEXT,
       data_trovato     TEXT NOT NULL,
-      stato            TEXT NOT NULL DEFAULT 'nuovo'
+      stato            TEXT NOT NULL DEFAULT 'nuovo',
+      pipeline_status  TEXT NOT NULL DEFAULT 'nuovo',
+      client_email     TEXT,
+      notes            TEXT
     )
   `);
+
+  // Migrazione retrocompatibile per le colonne del CRM
+  try { db.exec("ALTER TABLE leads ADD COLUMN pipeline_status TEXT NOT NULL DEFAULT 'nuovo'"); } catch {}
+  try { db.exec("ALTER TABLE leads ADD COLUMN client_email TEXT"); } catch {}
+  try { db.exec("ALTER TABLE leads ADD COLUMN notes TEXT"); } catch {}
 
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
@@ -59,9 +67,9 @@ export function insertLead(lead: Omit<Lead, 'id'>): void {
     INSERT OR IGNORE INTO leads
       (fonte, url, titolo, testo, punteggio_intent, settore, problema,
        soluzione_proposta, bozza_risposta, evidenza_budget, evidenza_budget_dettaglio,
-       urgenza, data_trovato, stato)
+       urgenza, data_trovato, stato, pipeline_status)
     VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   stmt.run(
@@ -79,6 +87,7 @@ export function insertLead(lead: Omit<Lead, 'id'>): void {
     lead.urgenza,
     lead.data_trovato,
     lead.stato,
+    lead.pipeline_status || 'nuovo'
   );
 }
 
@@ -95,7 +104,35 @@ export function getQualifiedLeads(minScore: number, limit: number): Lead[] {
        ORDER BY punteggio_intent DESC
        LIMIT ?`
     )
-    .all(minScore, limit) as Lead[];
+      .all(minScore, limit) as Lead[];
+}
+
+/** Recupera tutti i lead nel database per la dashboard */
+export function getAllLeads(): Lead[] {
+  return getDb()
+    .prepare('SELECT * FROM leads ORDER BY punteggio_intent DESC, data_trovato DESC')
+    .all() as Lead[];
+}
+
+/** Aggiorna lo stato del lead nella pipeline del CRM */
+export function updateLeadStatus(id: number, status: string): void {
+  getDb()
+    .prepare('UPDATE leads SET pipeline_status = ? WHERE id = ?')
+    .run(status, id);
+}
+
+/** Aggiorna la mail del cliente associata al lead */
+export function updateLeadEmail(id: number, email: string): void {
+  getDb()
+    .prepare('UPDATE leads SET client_email = ? WHERE id = ?')
+    .run(email, id);
+}
+
+/** Aggiorna le note personali del lead */
+export function updateLeadNotes(id: number, notes: string): void {
+  getDb()
+    .prepare('UPDATE leads SET notes = ? WHERE id = ?')
+    .run(notes, id);
 }
 
 /** Segna i lead come 'processato' dopo l'invio del report */

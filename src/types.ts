@@ -44,6 +44,9 @@ export interface Lead {
   urgenza: string;
   data_trovato: string;
   stato: 'nuovo' | 'processato' | 'contattato';
+  pipeline_status?: 'nuovo' | 'contattato' | 'in_trattativa' | 'preventivo_inviato' | 'chiuso_vinto' | 'chiuso_perso';
+  client_email?: string | null;
+  notes?: string | null;
 }
 
 /** Configurazione caricata da config.json */
