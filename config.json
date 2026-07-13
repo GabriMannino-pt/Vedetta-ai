@@ -30,8 +30,8 @@
   "scoring": {
     "minIntentScore": 6,
     "geminiModel": "gemini-3.5-flash",
-    "maxRetries": 2,
-    "delayBetweenCallsMs": 1500
+    "maxRetries": 3,
+    "delayBetweenCallsMs": 4500
   },
   "report": {
     "maxLeadsInReport": 20

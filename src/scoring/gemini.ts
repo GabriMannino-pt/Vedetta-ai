@@ -91,6 +91,7 @@ export async function scorePost(post: RawPost): Promise<ScoringResult | null> {
     generationConfig: {
       temperature: 0.2,
       maxOutputTokens: 1500,
+      responseMimeType: "application/json",
     },
   });
   const prompt = buildPrompt(post);
@@ -113,7 +114,7 @@ export async function scorePost(post: RawPost): Promise<ScoringResult | null> {
       const isRateLimit = err?.status === 429 || err?.message?.includes('429');
 
       if (isRateLimit) {
-        const waitMs = 15_000; // Gemini free tier: 15 RPM
+        const waitMs = 60_000; // Gemini free tier: aspetta 1 minuto intero per sbloccare la quota
         console.warn(`[GEMINI] ⚠️  Rate limited, attendo ${waitMs / 1000}s...`);
         await sleep(waitMs);
         continue;
