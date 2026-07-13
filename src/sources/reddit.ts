@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { RawPost } from '../types';
 import { appConfig, requireEnv } from '../config';
+import { canQuery, trackQuery, queriesRemaining } from './cse-limiter';
 
 const GOOGLE_CSE_URL = 'https://www.googleapis.com/customsearch/v1';
 
@@ -36,6 +37,10 @@ export async function fetchRedditPosts(): Promise<RawPost[]> {
   const seenUrls = new Set<string>();
 
   for (const query of queries) {
+    if (!canQuery()) {
+      console.warn(`[REDDIT] ⚠️  Limite giornaliero query CSE raggiunto (${queriesRemaining()} rimaste), stop`);
+      break;
+    }
     try {
       // dateRestrict limita ai risultati degli ultimi N giorni
       const dateRestrict = `d${appConfig.reddit.maxPostAgeDays}`;
@@ -50,6 +55,7 @@ export async function fetchRedditPosts(): Promise<RawPost[]> {
         },
       });
 
+      trackQuery();
       const items = res.data.items || [];
 
       for (const item of items) {

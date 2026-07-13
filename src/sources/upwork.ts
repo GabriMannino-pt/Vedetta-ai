@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { RawPost } from '../types';
 import { appConfig, requireEnv } from '../config';
+import { canQuery, trackQuery, queriesRemaining } from './cse-limiter';
 
 const GOOGLE_CSE_URL = 'https://www.googleapis.com/customsearch/v1';
 
@@ -32,6 +33,10 @@ export async function fetchUpworkJobs(): Promise<RawPost[]> {
   const seenUrls = new Set<string>();
 
   for (const keyword of keywords) {
+    if (!canQuery()) {
+      console.warn(`[UPWORK] ⚠️  Limite giornaliero query CSE raggiunto (${queriesRemaining()} rimaste), stop`);
+      break;
+    }
     try {
       const query = `site:upwork.com/freelance-jobs ${keyword}`;
       const dateRestrict = `d${appConfig.upwork.maxPostAgeDays}`;
@@ -46,6 +51,7 @@ export async function fetchUpworkJobs(): Promise<RawPost[]> {
         },
       });
 
+      trackQuery();
       const items = res.data.items || [];
 
       for (const item of items) {

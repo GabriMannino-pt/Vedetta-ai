@@ -6,6 +6,7 @@ import { generateReport } from './report/generator';
 import { sendTelegramReport } from './report/sender';
 import { appConfig } from './config';
 import { RawPost } from './types';
+import { queriesUsedCount, queriesRemaining } from './sources/cse-limiter';
 
 async function main(): Promise<void> {
   const startTime = Date.now();
@@ -127,7 +128,7 @@ async function main(): Promise<void> {
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log('');
   console.log('═'.repeat(50));
-  console.log(`✅ VEDETTA completato in ${elapsed}s | DB totale: ${countLeadsTotal()}`);
+  console.log(`✅ VEDETTA completato in ${elapsed}s | DB totale: ${countLeadsTotal()} | Query CSE usate: ${queriesUsedCount()} (${queriesRemaining()} rimaste)`);
   console.log('═'.repeat(50));
   console.log('');
 }
