@@ -9,17 +9,18 @@ Vedetta monitora quotidianamente Reddit e Upwork per trovare post e job posting 
 ## 🏗️ Architettura
 
 ```
-Google CSE (Reddit) ──┐
-                       ├──▸ Deduplicazione ──▸ Gemini Scoring ──▸ SQLite ──▸ Report ──▸ Telegram
-Google CSE (Upwork) ──┘
+Tavily API (Reddit Search) ──┐
+                              ├──▸ Deduplicazione ──▸ Gemini Scoring ──▸ SQLite ──▸ Report ──▸ Telegram
+Tavily API (Upwork Search) ──┘
 ```
 
 ## 📋 Prerequisiti
 
 - **Node.js** >= 18
 - **npm** >= 9
-- Account Google (per CSE + Gemini) — gratuito
-- Bot Telegram (per i report)
+- Account Tavily (gratuito) — per le ricerche
+- Account Google Gemini (gratuito) — per l'analisi
+- Bot Telegram (gratuito) — per i report
 
 ---
 
@@ -57,31 +58,18 @@ npm run scout
 
 ## 🔑 Come ottenere le credenziali
 
-### Google Custom Search (per Reddit)
+### Tavily Search API (gratuito)
 
-Poiché l'API Reddit richiede approvazione manuale (dal 2025), Vedetta usa Google Custom Search per trovare post Reddit. Gratis fino a 100 query/giorno.
+Poiché le API di Reddit e Upwork richiedono approvazioni complesse o sono a pagamento, Vedetta usa **Tavily** per cercare su entrambi i siti in modo stabile e gratuito.
 
-**Passo 1 — API Key Google:**
-1. Vai su [console.cloud.google.com](https://console.cloud.google.com)
-2. Crea un progetto (o selezionane uno esistente)
-3. Vai su **API e servizi → Libreria** e abilita **"Custom Search API"**
-4. Vai su **API e servizi → Credenziali** e clicca **"Crea credenziali" → "Chiave API"**
-5. Copia la chiave
+1. Vai su [tavily.com](https://tavily.com) e registrati (nessuna carta richiesta)
+2. Copia la API key dalla dashboard
+3. Inserisci nel `.env`:
+   ```
+   TAVILY_API_KEY=tvly-...
+   ```
 
-**Passo 2 — Search Engine ID:**
-1. Vai su [programmablesearchengine.google.com](https://programmablesearchengine.google.com)
-2. Clicca **"Aggiungi"** per creare un nuovo motore di ricerca
-3. In **"Siti da cercare"** inserisci: `reddit.com` e `upwork.com` (uno per riga)
-4. Dai un nome (es. "Vedetta")
-5. Clicca **"Crea"** e copia il **Search Engine ID** ("cx")
-
-**Passo 3 — Inserisci nel `.env`:**
-```
-GOOGLE_CSE_API_KEY=la_tua_api_key
-GOOGLE_CSE_ID=il_tuo_search_engine_id
-```
-
-> **Nota:** Il free tier offre 100 query/giorno (condivise tra Reddit e Upwork), ampiamente sufficienti per Vedetta.
+> **Nota:** Il piano gratuito offre 1.000 ricerche al mese. Vedetta consuma circa 16 ricerche per ogni run (480/mese), rientrando perfettamente nel piano gratuito.
 
 ### Google Gemini (gratuito)
 
@@ -114,10 +102,10 @@ Modifica `config.json` per personalizzare il comportamento:
 
 | Campo | Descrizione |
 |---|---|
-| `reddit.searchQueries` | Query di ricerca Google CSE (con `site:reddit.com`) |
+| `reddit.searchQueries` | Query di ricerca per Reddit via Tavily |
 | `reddit.resultsPerQuery` | Numero max di risultati per query (max 10) |
 | `reddit.maxPostAgeDays` | Età massima dei risultati (giorni) |
-| `upwork.keywords` | Keyword di ricerca Upwork via Google CSE |
+| `upwork.keywords` | Keyword di ricerca Upwork via Tavily |
 | `upwork.resultsPerKeyword` | Numero max di risultati per keyword (max 10) |
 | `upwork.maxPostAgeDays` | Età massima dei job posting (giorni) |
 | `scoring.minIntentScore` | Punteggio minimo per includere nel report (0-10) |

@@ -1,61 +1,44 @@
 import axios from 'axios';
 import { RawPost } from '../types';
 import { appConfig, requireEnv } from '../config';
-import { canQuery, trackQuery, queriesRemaining } from './cse-limiter';
 
-const GOOGLE_CSE_URL = 'https://www.googleapis.com/customsearch/v1';
+const TAVILY_API_URL = 'https://api.tavily.com/search';
 
 /**
- * Cerca job posting Upwork tramite Google Custom Search API.
- * Usa lo stesso motore di ricerca di Reddit ma con query site:upwork.com.
- *
- * Questo approccio elimina la necessità di credenziali Upwork OAuth2
- * e funziona con il free tier di Google CSE (100 query/giorno totali
- * condivise con le query Reddit).
+ * Cerca job posting Upwork tramite Tavily Search API.
+ * Filtra la ricerca includendo solo il dominio upwork.com.
  */
 export async function fetchUpworkJobs(): Promise<RawPost[]> {
   let apiKey: string;
-  let searchEngineId: string;
 
   try {
-    apiKey = requireEnv('GOOGLE_CSE_API_KEY');
-    searchEngineId = requireEnv('GOOGLE_CSE_ID');
+    apiKey = requireEnv('TAVILY_API_KEY');
   } catch {
-    console.warn('[UPWORK] ⚠️  GOOGLE_CSE_API_KEY o GOOGLE_CSE_ID non configurati, skip sorgente Upwork');
+    console.warn('[UPWORK] ⚠️  TAVILY_API_KEY non configurata, skip sorgente Upwork');
     return [];
   }
 
   const keywords = appConfig.upwork.keywords;
   const resultsPerKeyword = appConfig.upwork.resultsPerKeyword;
-  console.log(`[UPWORK] 🔍 Ricerca job Upwork via Google CSE (${keywords.length} keyword)...`);
+  console.log(`[UPWORK] 🔍 Ricerca job Upwork via Tavily API (${keywords.length} keyword)...`);
 
   const allJobs: RawPost[] = [];
   const seenUrls = new Set<string>();
 
   for (const keyword of keywords) {
-    if (!canQuery()) {
-      console.warn(`[UPWORK] ⚠️  Limite giornaliero query CSE raggiunto (${queriesRemaining()} rimaste), stop`);
-      break;
-    }
     try {
-      const query = `site:upwork.com/freelance-jobs ${keyword}`;
-      const dateRestrict = `d${appConfig.upwork.maxPostAgeDays}`;
-
-      const res = await axios.get(GOOGLE_CSE_URL, {
-        params: {
-          key: apiKey,
-          cx: searchEngineId,
-          q: query,
-          num: Math.min(resultsPerKeyword, 10),
-          dateRestrict,
-        },
+      const res = await axios.post(TAVILY_API_URL, {
+        api_key: apiKey,
+        query: keyword,
+        search_depth: 'basic',
+        max_results: Math.min(resultsPerKeyword, 10),
+        include_domains: ['upwork.com'],
       });
 
-      trackQuery();
-      const items = res.data.items || [];
+      const results = res.data.results || [];
 
-      for (const item of items) {
-        const url = item.link;
+      for (const item of results) {
+        const url = item.url;
         if (!url || seenUrls.has(url)) continue;
 
         // Filtra solo pagine di job posting reali
@@ -64,33 +47,24 @@ export async function fetchUpworkJobs(): Promise<RawPost[]> {
         seenUrls.add(url);
 
         // Estrai eventuale budget dallo snippet
-        const budgetStr = extractBudget(item.snippet || '');
+        const budgetStr = extractBudget(item.content || '');
 
         allJobs.push({
           source: 'upwork',
           id: extractJobId(url) || url,
           url,
           title: cleanTitle(item.title || ''),
-          body: item.snippet || '',
-          author: 'via Google CSE',
+          body: item.content || '',
+          author: 'via Tavily',
           createdAt: new Date(),
           upworkBudget: budgetStr,
         });
       }
 
-      console.log(`[UPWORK]   "${keyword}": ${items.length} risultati`);
+      console.log(`[UPWORK]   "${keyword}": ${results.length} risultati`);
       await sleep(300);
     } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 429) {
-        console.warn('[UPWORK] ⚠️  Quota giornaliera Google CSE esaurita, stop ricerche');
-        break;
-      } else if (status === 403) {
-        console.error('[UPWORK] ❌ API key Google non valida');
-        return allJobs;
-      } else {
-        console.error(`[UPWORK] ❌ Errore per keyword "${keyword}":`, err.message);
-      }
+      console.error(`[UPWORK] ❌ Errore per keyword "${keyword}":`, err.message);
     }
   }
 
@@ -98,18 +72,15 @@ export async function fetchUpworkJobs(): Promise<RawPost[]> {
   return allJobs;
 }
 
-/** Controlla se l'URL è un job posting Upwork reale */
 function isUpworkJob(url: string): boolean {
   return /upwork\.com\/(freelance-jobs|jobs|ab\/jobs)\//.test(url);
 }
 
-/** Estrae l'ID del job dall'URL Upwork */
 function extractJobId(url: string): string | undefined {
   const match = url.match(/[/~](\w{18,})/);
   return match ? match[1] : undefined;
 }
 
-/** Pulisce il titolo rimuovendo suffissi tipici di Upwork */
 function cleanTitle(title: string): string {
   return title
     .replace(/\s*[-|]\s*Upwork$/i, '')
@@ -117,7 +88,6 @@ function cleanTitle(title: string): string {
     .trim();
 }
 
-/** Tenta di estrarre un budget dallo snippet Google */
 function extractBudget(snippet: string): string | undefined {
   const match = snippet.match(/\$[\d,]+(?:\s*[-–]\s*\$[\d,]+)?(?:\/hr)?/);
   return match ? match[0] : undefined;

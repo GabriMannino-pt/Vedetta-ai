@@ -1,68 +1,47 @@
 import axios from 'axios';
 import { RawPost } from '../types';
 import { appConfig, requireEnv } from '../config';
-import { canQuery, trackQuery, queriesRemaining } from './cse-limiter';
 
-const GOOGLE_CSE_URL = 'https://www.googleapis.com/customsearch/v1';
+const TAVILY_API_URL = 'https://api.tavily.com/search';
 
 /**
- * Cerca post Reddit tramite Google Custom Search API.
- *
- * Vantaggi rispetto all'API Reddit diretta:
- * - Nessuna approvazione necessaria
- * - Gratis fino a 100 query/giorno
- * - Filtra automaticamente per rilevanza (ranking Google)
- *
- * Limitazioni:
- * - Non cattura post recentissimi (< qualche ora dall'indicizzazione)
- * - Limite 100 query/giorno nel free tier
+ * Cerca post Reddit tramite Tavily Search API.
+ * Usa il free tier di Tavily (1000 ricerche gratis al mese).
  */
 export async function fetchRedditPosts(): Promise<RawPost[]> {
   let apiKey: string;
-  let searchEngineId: string;
 
   try {
-    apiKey = requireEnv('GOOGLE_CSE_API_KEY');
-    searchEngineId = requireEnv('GOOGLE_CSE_ID');
+    apiKey = requireEnv('TAVILY_API_KEY');
   } catch {
-    console.warn('[REDDIT] ⚠️  GOOGLE_CSE_API_KEY o GOOGLE_CSE_ID non configurati, skip sorgente Reddit');
+    console.warn('[REDDIT] ⚠️  TAVILY_API_KEY non configurata, skip sorgente Reddit');
     return [];
   }
 
   const queries = appConfig.reddit.searchQueries;
   const resultsPerQuery = appConfig.reddit.resultsPerQuery;
-  console.log(`[REDDIT] 🔍 Ricerca su Reddit via Google CSE (${queries.length} query)...`);
+  console.log(`[REDDIT] 🔍 Ricerca su Reddit via Tavily API (${queries.length} query)...`);
 
   const allPosts: RawPost[] = [];
   const seenUrls = new Set<string>();
 
   for (const query of queries) {
-    if (!canQuery()) {
-      console.warn(`[REDDIT] ⚠️  Limite giornaliero query CSE raggiunto (${queriesRemaining()} rimaste), stop`);
-      break;
-    }
     try {
-      // dateRestrict limita ai risultati degli ultimi N giorni
-      const dateRestrict = `d${appConfig.reddit.maxPostAgeDays}`;
-
-      const res = await axios.get(GOOGLE_CSE_URL, {
-        params: {
-          key: apiKey,
-          cx: searchEngineId,
-          q: query,
-          num: Math.min(resultsPerQuery, 10), // Google CSE max 10 per richiesta
-          dateRestrict,
-        },
+      const res = await axios.post(TAVILY_API_URL, {
+        api_key: apiKey,
+        query: query,
+        search_depth: 'basic',
+        max_results: Math.min(resultsPerQuery, 10),
+        include_domains: ['reddit.com'],
       });
 
-      trackQuery();
-      const items = res.data.items || [];
+      const results = res.data.results || [];
 
-      for (const item of items) {
-        const url = item.link;
+      for (const item of results) {
+        const url = item.url;
         if (!url || seenUrls.has(url)) continue;
 
-        // Filtra solo post Reddit (non pagine di subreddit, wiki, ecc.)
+        // Filtra solo post Reddit reali (non wiki, help, ecc.)
         if (!isRedditPost(url)) continue;
 
         seenUrls.add(url);
@@ -74,28 +53,19 @@ export async function fetchRedditPosts(): Promise<RawPost[]> {
           id: extractRedditId(url) || url,
           url,
           title: item.title || '',
-          body: item.snippet || '',
-          author: 'via Google CSE',
-          createdAt: new Date(), // Google CSE non fornisce data esatta del post
+          body: item.content || '',
+          author: 'via Tavily',
+          createdAt: new Date(),
           subreddit,
         });
       }
 
-      console.log(`[REDDIT]   "${query}": ${items.length} risultati`);
+      console.log(`[REDDIT]   "${query}": ${results.length} risultati`);
 
-      // Pausa tra query per rispettare rate limit
+      // Piccolo delay per non sovraccaricare
       await sleep(300);
     } catch (err: any) {
-      const status = err?.response?.status;
-      if (status === 429) {
-        console.warn('[REDDIT] ⚠️  Quota giornaliera Google CSE esaurita (100/giorno), stop ricerche');
-        break;
-      } else if (status === 403) {
-        console.error('[REDDIT] ❌ API key Google non valida o CSE non configurato');
-        return allPosts;
-      } else {
-        console.error(`[REDDIT] ❌ Errore per query "${query}":`, err.message);
-      }
+      console.error(`[REDDIT] ❌ Errore per query "${query}":`, err.message);
     }
   }
 
@@ -103,18 +73,15 @@ export async function fetchRedditPosts(): Promise<RawPost[]> {
   return allPosts;
 }
 
-/** Controlla se l'URL è un post Reddit (non una pagina di subreddit o wiki) */
 function isRedditPost(url: string): boolean {
   return /reddit\.com\/r\/\w+\/comments\//.test(url);
 }
 
-/** Estrae il nome del subreddit dall'URL */
 function extractSubreddit(url: string): string | undefined {
   const match = url.match(/reddit\.com\/r\/(\w+)\//);
   return match ? match[1] : undefined;
 }
 
-/** Estrae l'ID del post Reddit dall'URL */
 function extractRedditId(url: string): string | undefined {
   const match = url.match(/\/comments\/(\w+)\//);
   return match ? match[1] : undefined;
