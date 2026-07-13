@@ -150,7 +150,7 @@ I lead vengono salvati in un database SQLite locale in `.data/vedetta.db`. Tabel
 | `id` | INTEGER | ID autoincrement |
 | `fonte` | TEXT | `reddit` o `upwork` |
 | `url` | TEXT (UNIQUE) | URL del post/job (chiave di deduplicazione) |
-| `punteggio_intent` | INTEGER | Score 0-10 dall'analisi Claude |
+| `punteggio_intent` | INTEGER | Score 0-10 dall'analisi Gemini |
 | `settore` | TEXT | Settore identificato |
 | `problema` | TEXT | Dolore operativo descritto |
 | `bozza_risposta` | TEXT | Risposta pronta da inviare |
@@ -161,6 +161,65 @@ Puoi consultare il database direttamente con qualsiasi client SQLite:
 ```bash
 sqlite3 .data/vedetta.db "SELECT url, punteggio_intent, settore FROM leads ORDER BY punteggio_intent DESC"
 ```
+
+---
+
+## ☁️ Deployment su AWS EC2 (Guida Dettagliata)
+
+Per far girare Vedetta in automatico ogni mattina alle 8:00 senza tenere acceso il tuo computer, puoi caricarlo su un'istanza AWS EC2 (anche nel piano gratuito `t2.micro`).
+
+### 1. Connettiti alla tua macchina AWS via SSH
+Usa il tuo terminale per connetterti all'istanza EC2:
+```bash
+ssh -i "il-tuo-key-pair.pem" ubuntu@il-tuo-ip-pubblico-aws
+```
+
+### 2. Prepara l'ambiente sulla macchina Linux
+Assicurati che Node.js e Git siano installati sulla macchina AWS (ad es. per Ubuntu):
+```bash
+# Aggiorna il sistema
+sudo apt update && sudo apt upgrade -y
+
+# Installa Node.js (versione 18 o superiore)
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Verifica l'installazione
+node -v
+npm -v
+```
+
+### 3. Clona il repository e configura l'applicazione
+```bash
+# Clona il codice da GitHub
+git clone https://github.com/GabriMannino-pt/Vedetta-ai.git
+cd Vedetta-ai
+
+# Installa le dipendenze e builda il progetto
+npm install
+npm run build
+
+# Crea il file di configurazione .env
+nano .env
+```
+Nel file `.env` che si apre, incolla le tue chiavi e salva (`Ctrl+O`, poi invio, poi `Ctrl+X` per uscire):
+```env
+TAVILY_API_KEY=tvly-dev-...
+GEMINI_API_KEY=AQ.Ab8RN6I...
+TELEGRAM_BOT_TOKEN=8906495...
+TELEGRAM_CHAT_ID=102057450
+```
+
+### 4. Configura il Cron di Linux per l'esecuzione alle 8:00
+Apri l'editor dei cron jobs del sistema:
+```bash
+crontab -e
+```
+Scegli l'editor che preferisci (ad esempio `nano` premendo `1` e poi Invio), vai in fondo al file e aggiungi la riga seguente (sostituendo `/home/ubuntu/Vedetta-ai` con il percorso corretto se diverso):
+```cron
+0 8 * * * cd /home/ubuntu/Vedetta-ai && /usr/bin/npm start >> /home/ubuntu/Vedetta-ai/vedetta.log 2>&1
+```
+*Nota: Questa istruzione dice a Linux di entrare nella cartella di Vedetta ogni giorno alle 08:00, avviare il processo di scouting e salvare eventuali log ed errori nel file `vedetta.log`.*
 
 ---
 
