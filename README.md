@@ -9,16 +9,17 @@ Vedetta monitora quotidianamente Reddit e Upwork per trovare post e job posting 
 ## 🏗️ Architettura
 
 ```
-Reddit API ──┐
-              ├──▸ Deduplicazione ──▸ Gemini Scoring ──▸ SQLite ──▸ Report ──▸ Telegram
-Upwork API ──┘
+Google CSE (Reddit) ──┐
+                       ├──▸ Deduplicazione ──▸ Gemini Scoring ──▸ SQLite ──▸ Report ──▸ Telegram
+Google CSE (Upwork) ──┘
 ```
 
 ## 📋 Prerequisiti
 
 - **Node.js** >= 18
 - **npm** >= 9
-- Account e API key per: Reddit, Upwork (opzionale), Google Gemini (gratuito), Telegram
+- Account Google (per CSE + Gemini) — gratuito
+- Bot Telegram (per i report)
 
 ---
 
@@ -70,8 +71,8 @@ Poiché l'API Reddit richiede approvazione manuale (dal 2025), Vedetta usa Googl
 **Passo 2 — Search Engine ID:**
 1. Vai su [programmablesearchengine.google.com](https://programmablesearchengine.google.com)
 2. Clicca **"Aggiungi"** per creare un nuovo motore di ricerca
-3. In **"Siti da cercare"** inserisci: `reddit.com`
-4. Dai un nome (es. "Vedetta Reddit")
+3. In **"Siti da cercare"** inserisci: `reddit.com` e `upwork.com` (uno per riga)
+4. Dai un nome (es. "Vedetta")
 5. Clicca **"Crea"** e copia il **Search Engine ID** ("cx")
 
 **Passo 3 — Inserisci nel `.env`:**
@@ -80,19 +81,7 @@ GOOGLE_CSE_API_KEY=la_tua_api_key
 GOOGLE_CSE_ID=il_tuo_search_engine_id
 ```
 
-> **Nota:** Il free tier offre 100 query/giorno, ampiamente sufficienti per Vedetta.
-
-### Upwork API
-
-1. Vai su [upwork.com/developer/keys/apply](https://www.upwork.com/developer/keys/apply)
-2. Registra una nuova app con accesso "Read" ai job
-3. Completa il flusso OAuth2 per ottenere un access token
-4. Inserisci nel `.env`:
-   ```
-   UPWORK_ACCESS_TOKEN=il_tuo_access_token
-   ```
-
-> **Nota:** L'API Upwork è opzionale. Se non configurata, Vedetta funziona comunque solo con Reddit.
+> **Nota:** Il free tier offre 100 query/giorno (condivise tra Reddit e Upwork), ampiamente sufficienti per Vedetta.
 
 ### Google Gemini (gratuito)
 
@@ -128,7 +117,9 @@ Modifica `config.json` per personalizzare il comportamento:
 | `reddit.searchQueries` | Query di ricerca Google CSE (con `site:reddit.com`) |
 | `reddit.resultsPerQuery` | Numero max di risultati per query (max 10) |
 | `reddit.maxPostAgeDays` | Età massima dei risultati (giorni) |
-| `upwork.keywords` | Keyword di ricerca su Upwork |
+| `upwork.keywords` | Keyword di ricerca Upwork via Google CSE |
+| `upwork.resultsPerKeyword` | Numero max di risultati per keyword (max 10) |
+| `upwork.maxPostAgeDays` | Età massima dei job posting (giorni) |
 | `scoring.minIntentScore` | Punteggio minimo per includere nel report (0-10) |
 | `scoring.geminiModel` | Modello Gemini da usare (es. `gemini-2.0-flash`) |
 | `scoring.delayBetweenCallsMs` | Pausa tra chiamate API Gemini (ms) |

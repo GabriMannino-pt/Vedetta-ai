@@ -24,7 +24,8 @@
       "Make.com",
       "data integration"
     ],
-    "maxResults": 50
+    "resultsPerKeyword": 10,
+    "maxPostAgeDays": 7
   },
   "scoring": {
     "minIntentScore": 6,

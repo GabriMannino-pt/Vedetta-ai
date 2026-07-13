@@ -55,7 +55,8 @@ export interface AppConfig {
   };
   upwork: {
     keywords: string[];
-    maxResults: number;
+    resultsPerKeyword: number;
+    maxPostAgeDays: number;
   };
   scoring: {
     minIntentScore: number;

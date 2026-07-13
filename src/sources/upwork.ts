@@ -2,96 +2,119 @@ import axios from 'axios';
 import { RawPost } from '../types';
 import { appConfig, requireEnv } from '../config';
 
-const UPWORK_API_BASE = 'https://www.upwork.com/api/profiles/v2/search/jobs.json';
+const GOOGLE_CSE_URL = 'https://www.googleapis.com/customsearch/v1';
 
 /**
- * Fetch dei job posting da Upwork per le keyword configurate.
+ * Cerca job posting Upwork tramite Google Custom Search API.
+ * Usa lo stesso motore di ricerca di Reddit ma con query site:upwork.com.
  *
- * ⚠️ L'API Upwork richiede una app registrata con OAuth2.
- * Qui usiamo un access token pre-ottenuto (configurato in .env).
- * Per il primo setup, seguire il flusso OAuth2 documentato nel README.
- *
- * Se l'API Upwork non è configurata o fallisce, il sistema continua
- * senza questa fonte — non è bloccante.
+ * Questo approccio elimina la necessità di credenziali Upwork OAuth2
+ * e funziona con il free tier di Google CSE (100 query/giorno totali
+ * condivise con le query Reddit).
  */
 export async function fetchUpworkJobs(): Promise<RawPost[]> {
-  let accessToken: string;
+  let apiKey: string;
+  let searchEngineId: string;
+
   try {
-    accessToken = requireEnv('UPWORK_ACCESS_TOKEN');
+    apiKey = requireEnv('GOOGLE_CSE_API_KEY');
+    searchEngineId = requireEnv('GOOGLE_CSE_ID');
   } catch {
-    console.warn('[UPWORK] ⚠️  UPWORK_ACCESS_TOKEN non configurato, skip sorgente Upwork');
+    console.warn('[UPWORK] ⚠️  GOOGLE_CSE_API_KEY o GOOGLE_CSE_ID non configurati, skip sorgente Upwork');
     return [];
   }
 
   const keywords = appConfig.upwork.keywords;
-  const maxResults = appConfig.upwork.maxResults;
-  console.log(`[UPWORK] 🔍 Ricerca job per ${keywords.length} keyword...`);
+  const resultsPerKeyword = appConfig.upwork.resultsPerKeyword;
+  console.log(`[UPWORK] 🔍 Ricerca job Upwork via Google CSE (${keywords.length} keyword)...`);
 
   const allJobs: RawPost[] = [];
-  const seenIds = new Set<string>();
+  const seenUrls = new Set<string>();
 
   for (const keyword of keywords) {
     try {
-      const res = await axios.get(UPWORK_API_BASE, {
+      const query = `site:upwork.com/freelance-jobs ${keyword}`;
+      const dateRestrict = `d${appConfig.upwork.maxPostAgeDays}`;
+
+      const res = await axios.get(GOOGLE_CSE_URL, {
         params: {
-          q: keyword,
-          paging: `0;${Math.min(maxResults, 20)}`,
-          sort: 'recency',
-          days_posted: appConfig.reddit.maxPostAgeDays,
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'User-Agent': 'Vedetta/1.0.0',
+          key: apiKey,
+          cx: searchEngineId,
+          q: query,
+          num: Math.min(resultsPerKeyword, 10),
+          dateRestrict,
         },
       });
 
-      const jobs = res.data?.jobs?.job || res.data?.jobs || [];
-      if (!Array.isArray(jobs)) {
-        console.warn(`[UPWORK] ⚠️  Risposta inattesa per keyword "${keyword}"`);
-        continue;
-      }
+      const items = res.data.items || [];
 
-      for (const job of jobs) {
-        const jobId = job.id || job.ciphertext || job.recno?.toString();
-        if (!jobId || seenIds.has(jobId)) continue;
-        seenIds.add(jobId);
+      for (const item of items) {
+        const url = item.link;
+        if (!url || seenUrls.has(url)) continue;
 
-        const url = job.id
-          ? `https://www.upwork.com/jobs/${job.id}`
-          : `https://www.upwork.com/jobs/~${job.ciphertext || jobId}`;
+        // Filtra solo pagine di job posting reali
+        if (!isUpworkJob(url)) continue;
 
-        const budgetStr = job.budget
-          ? `$${job.budget.amount || job.budget}`
-          : job.type === 'Hourly'
-            ? `$${job.client_hourly_rate || '?'}/hr`
-            : undefined;
+        seenUrls.add(url);
+
+        // Estrai eventuale budget dallo snippet
+        const budgetStr = extractBudget(item.snippet || '');
 
         allJobs.push({
           source: 'upwork',
-          id: jobId,
+          id: extractJobId(url) || url,
           url,
-          title: job.title || 'Untitled',
-          body: job.snippet || job.description || '',
-          author: job.client?.company_name || job.client?.country || 'Unknown',
-          createdAt: new Date(job.date_created || Date.now()),
+          title: cleanTitle(item.title || ''),
+          body: item.snippet || '',
+          author: 'via Google CSE',
+          createdAt: new Date(),
           upworkBudget: budgetStr,
         });
       }
 
-      console.log(`[UPWORK]   "${keyword}": ${jobs.length} risultati`);
-      await sleep(1000);
+      console.log(`[UPWORK]   "${keyword}": ${items.length} risultati`);
+      await sleep(300);
     } catch (err: any) {
       const status = err?.response?.status;
-      if (status === 401 || status === 403) {
-        console.error('[UPWORK] ❌ Token non valido o scaduto. Rigenera il token OAuth2.');
-        return allJobs; // Interrompi, token non valido
+      if (status === 429) {
+        console.warn('[UPWORK] ⚠️  Quota giornaliera Google CSE esaurita, stop ricerche');
+        break;
+      } else if (status === 403) {
+        console.error('[UPWORK] ❌ API key Google non valida');
+        return allJobs;
+      } else {
+        console.error(`[UPWORK] ❌ Errore per keyword "${keyword}":`, err.message);
       }
-      console.error(`[UPWORK] ❌ Errore per keyword "${keyword}":`, err.message);
     }
   }
 
-  console.log(`[UPWORK] ✅ Totale job raccolti: ${allJobs.length}`);
+  console.log(`[UPWORK] ✅ Totale job Upwork trovati: ${allJobs.length}`);
   return allJobs;
+}
+
+/** Controlla se l'URL è un job posting Upwork reale */
+function isUpworkJob(url: string): boolean {
+  return /upwork\.com\/(freelance-jobs|jobs|ab\/jobs)\//.test(url);
+}
+
+/** Estrae l'ID del job dall'URL Upwork */
+function extractJobId(url: string): string | undefined {
+  const match = url.match(/[/~](\w{18,})/);
+  return match ? match[1] : undefined;
+}
+
+/** Pulisce il titolo rimuovendo suffissi tipici di Upwork */
+function cleanTitle(title: string): string {
+  return title
+    .replace(/\s*[-|]\s*Upwork$/i, '')
+    .replace(/\s*[-|]\s*Freelance Job$/i, '')
+    .trim();
+}
+
+/** Tenta di estrarre un budget dallo snippet Google */
+function extractBudget(snippet: string): string | undefined {
+  const match = snippet.match(/\$[\d,]+(?:\s*[-–]\s*\$[\d,]+)?(?:\/hr)?/);
+  return match ? match[0] : undefined;
 }
 
 function sleep(ms: number): Promise<void> {
