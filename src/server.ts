@@ -1,7 +1,7 @@
 import express from 'express';
 import basicAuth from 'basic-auth';
 import nodemailer from 'nodemailer';
-import { initDb, getAllLeads, updateLeadStatus, updateLeadEmail, updateLeadNotes, closeDb } from './storage/db';
+import { initDb, getAllLeads, getLeadsByType, updateLeadStatus, updateLeadEmail, updateLeadNotes, closeDb } from './storage/db';
 import * as path from 'path';
 
 require('dotenv').config();
@@ -26,9 +26,16 @@ app.use(express.json());
 
 // 1. API: Ottieni tutti i lead
 app.get('/api/leads', authMiddleware, (req, res) => {
+  const tipo = req.query.tipo as 'inbound' | 'outbound' | undefined;
+
   try {
     initDb();
-    const leads = getAllLeads();
+    let leads;
+    if (tipo === 'inbound' || tipo === 'outbound') {
+      leads = getLeadsByType(tipo);
+    } else {
+      leads = getAllLeads();
+    }
     closeDb();
     res.json(leads);
   } catch (err: any) {

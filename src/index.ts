@@ -1,5 +1,6 @@
 import { fetchRedditPosts } from './sources/reddit';
 import { fetchUpworkJobs } from './sources/upwork';
+import { fetchOutboundLeads } from './sources/outbound';
 import { scorePost } from './scoring/gemini';
 import { initDb, isAlreadyProcessed, insertLead, markAsProcessed, closeDb, countLeads } from './storage/db';
 import { generateReport } from './report/generator';
@@ -36,6 +37,14 @@ async function main(): Promise<void> {
     allPosts.push(...upworkJobs);
   } catch (err: any) {
     console.error('[MAIN] ❌ Errore fatale Upwork (continuo):', err.message);
+  }
+
+  // Apollo Outbound
+  try {
+    const outboundLeads = await fetchOutboundLeads(10); // Cerca max 10 lead outbound al giorno
+    allPosts.push(...outboundLeads);
+  } catch (err: any) {
+    console.error('[MAIN] ❌ Errore fatale Outbound Apollo (continuo):', err.message);
   }
 
   console.log(`\n[MAIN] 📋 Totale post/job raccolti: ${allPosts.length}`);
@@ -81,6 +90,7 @@ async function main(): Promise<void> {
       urgenza: result.urgenza || 'bassa',
       data_trovato: now,
       stato: 'nuovo',
+      tipo: post.source === 'outbound' ? 'outbound' : 'inbound',
     });
 
     if (result.e_opportunita && result.punteggio_intent >= appConfig.scoring.minIntentScore) {

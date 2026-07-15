@@ -2,7 +2,7 @@
 
 /** Post grezzo recuperato da una qualsiasi fonte */
 export interface RawPost {
-  source: 'reddit' | 'upwork';
+  source: 'reddit' | 'upwork' | 'outbound';
   id: string;
   url: string;
   title: string;
@@ -47,6 +47,7 @@ export interface Lead {
   pipeline_status?: 'nuovo' | 'contattato' | 'in_trattativa' | 'preventivo_inviato' | 'chiuso_vinto' | 'chiuso_perso';
   client_email?: string | null;
   notes?: string | null;
+  tipo?: 'inbound' | 'outbound';
 }
 
 /** Configurazione caricata da config.json */

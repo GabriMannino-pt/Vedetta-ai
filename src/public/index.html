@@ -29,7 +29,47 @@
     </div>
   </header>
 
+  <!-- iOS-style Subheader for Source Switcher -->
+  <div class="ios-subheader">
+    <div class="source-segmented-control">
+      <button class="source-btn active" id="btn-source-inbound" onclick="switchSourceType('inbound')">📥 Inbound (Upwork/Reddit)</button>
+      <button class="source-btn" id="btn-source-outbound" onclick="switchSourceType('outbound')">📤 Outbound (B2B Italia)</button>
+    </div>
+  </div>
+
   <main class="ios-content">
+    
+    <!-- Statistics KPI Section -->
+    <section class="stats-container">
+      <div class="stat-card">
+        <div class="stat-icon icon-blue"><i data-lucide="users"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-total-leads">0</span>
+          <span class="stat-label">Total Leads</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon icon-purple"><i data-lucide="trending-up"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-avg-score">0.0</span>
+          <span class="stat-label">Avg Intent Score</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon icon-orange"><i data-lucide="mail-open"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-active-deals">0</span>
+          <span class="stat-label">Active Deals</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon icon-green"><i data-lucide="party-popper"></i></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-won-deals">0</span>
+          <span class="stat-label">Deals Won</span>
+        </div>
+      </div>
+    </section>
     
     <!-- View 1: KANBAN BOARD -->
     <section id="view-kanban" class="dashboard-view active">

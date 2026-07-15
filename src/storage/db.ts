@@ -38,14 +38,16 @@ export function initDb(): void {
       stato            TEXT NOT NULL DEFAULT 'nuovo',
       pipeline_status  TEXT NOT NULL DEFAULT 'nuovo',
       client_email     TEXT,
-      notes            TEXT
+      notes            TEXT,
+      tipo             TEXT NOT NULL DEFAULT 'inbound'
     )
   `);
 
-  // Migrazione retrocompatibile per le colonne del CRM
+  // Migrazione retrocompatibile per le colonne del CRM e il tipo
   try { db.exec("ALTER TABLE leads ADD COLUMN pipeline_status TEXT NOT NULL DEFAULT 'nuovo'"); } catch {}
   try { db.exec("ALTER TABLE leads ADD COLUMN client_email TEXT"); } catch {}
   try { db.exec("ALTER TABLE leads ADD COLUMN notes TEXT"); } catch {}
+  try { db.exec("ALTER TABLE leads ADD COLUMN tipo TEXT NOT NULL DEFAULT 'inbound'"); } catch {}
 
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
@@ -67,9 +69,9 @@ export function insertLead(lead: Omit<Lead, 'id'>): void {
     INSERT OR IGNORE INTO leads
       (fonte, url, titolo, testo, punteggio_intent, settore, problema,
        soluzione_proposta, bozza_risposta, evidenza_budget, evidenza_budget_dettaglio,
-       urgenza, data_trovato, stato, pipeline_status)
+       urgenza, data_trovato, stato, pipeline_status, tipo)
     VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   stmt.run(
@@ -87,7 +89,8 @@ export function insertLead(lead: Omit<Lead, 'id'>): void {
     lead.urgenza,
     lead.data_trovato,
     lead.stato,
-    lead.pipeline_status || 'nuovo'
+    lead.pipeline_status || 'nuovo',
+    lead.tipo || 'inbound'
   );
 }
 
@@ -100,7 +103,7 @@ export function getQualifiedLeads(minScore: number, limit: number): Lead[] {
   return getDb()
     .prepare(
       `SELECT * FROM leads
-       WHERE stato = 'nuovo' AND punteggio_intent >= ?
+       WHERE stato = 'nuovo' AND tipo = 'inbound' AND punteggio_intent >= ?
        ORDER BY punteggio_intent DESC
        LIMIT ?`
     )
@@ -112,6 +115,13 @@ export function getAllLeads(): Lead[] {
   return getDb()
     .prepare('SELECT * FROM leads ORDER BY punteggio_intent DESC, data_trovato DESC')
     .all() as Lead[];
+}
+
+/** Recupera i lead filtrati per tipo (inbound o outbound) */
+export function getLeadsByType(tipo: 'inbound' | 'outbound'): Lead[] {
+  return getDb()
+    .prepare('SELECT * FROM leads WHERE tipo = ? ORDER BY punteggio_intent DESC, data_trovato DESC')
+    .all(tipo) as Lead[];
 }
 
 /** Aggiorna lo stato del lead nella pipeline del CRM */

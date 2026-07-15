@@ -1,10 +1,25 @@
 let allLeads = [];
 let currentLead = null;
+let currentSourceType = 'inbound';
 
 // Inizializza l'applicazione al caricamento
 document.addEventListener('DOMContentLoaded', () => {
   refreshLeads();
 });
+
+// Cambia la sorgente tra Inbound (Upwork/Reddit) e Outbound (B2B Italia)
+function switchSourceType(sourceType) {
+  currentSourceType = sourceType;
+  
+  // Aggiorna classe attiva sui pulsanti della barra
+  document.querySelectorAll('.source-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.getElementById(`btn-source-${sourceType}`).classList.add('active');
+  
+  // Ricarica i lead della nuova sorgente
+  refreshLeads();
+}
 
 // Cambia visualizzazione tra Kanban e Lista
 function switchView(viewName) {
@@ -25,13 +40,14 @@ function switchView(viewName) {
 // Recupera i lead dal server e aggiorna l'interfaccia
 async function refreshLeads() {
   try {
-    const res = await fetch('/api/leads');
+    const res = await fetch(`/api/leads?tipo=${currentSourceType}`);
     if (!res.ok) throw new Error('Impossibile recuperare i lead');
     
     allLeads = await res.json();
     
     buildKanbanBoard();
     buildListView();
+    updateStatistics();
     
     // Inizializza le icone Lucide dopo aver caricato il DOM dinamico
     if (window.lucide) {
@@ -40,6 +56,33 @@ async function refreshLeads() {
   } catch (err) {
     console.error('❌ Errore refresh leads:', err.message);
   }
+}
+
+// Calcola e aggiorna le statistiche KPI in tempo reale
+function updateStatistics() {
+  const totalLeads = allLeads.length;
+  
+  let totalScore = 0;
+  let activeDeals = 0;
+  let wonDeals = 0;
+  
+  allLeads.forEach(lead => {
+    totalScore += lead.punteggio_intent || 0;
+    
+    const status = lead.pipeline_status || 'nuovo';
+    if (status === 'contattato' || status === 'in_trattativa' || status === 'preventivo_inviato') {
+      activeDeals++;
+    } else if (status === 'chiuso_vinto') {
+      wonDeals++;
+    }
+  });
+  
+  const avgScore = totalLeads > 0 ? (totalScore / totalLeads).toFixed(1) : '0.0';
+  
+  document.getElementById('stat-total-leads').innerText = totalLeads;
+  document.getElementById('stat-avg-score').innerText = avgScore;
+  document.getElementById('stat-active-deals').innerText = activeDeals;
+  document.getElementById('stat-won-deals').innerText = wonDeals;
 }
 
 // Costruisce la Kanban Board
@@ -112,6 +155,7 @@ async function handleDrop(event, newStatus) {
   if (lead) {
     lead.pipeline_status = newStatus;
     buildKanbanBoard();
+    updateStatistics();
   }
 
   // Aggiorna lo stato sul server
@@ -236,6 +280,7 @@ async function changeLeadStatusFromSheet() {
   if (!currentLead) return;
   const newStatus = document.getElementById('sheet-status-select').value;
   currentLead.pipeline_status = newStatus;
+  updateStatistics();
 
   try {
     await fetch(`/api/leads/${currentLead.id}`, {

@@ -137,8 +137,56 @@ body {
 }
 
 /* 🗺️ CONTENT LAYOUT */
+.ios-subheader {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: var(--ios-header-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--ios-card-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99;
+}
+
+.source-segmented-control {
+  background: rgba(116, 116, 128, 0.18);
+  padding: 3px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.source-btn {
+  background: transparent;
+  border: none;
+  color: var(--ios-gray);
+  font-family: var(--ios-font);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.source-btn:hover {
+  color: #FFFFFF;
+}
+
+.source-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
 .ios-content {
-  padding-top: 84px;
+  padding-top: 134px;
   padding-left: 20px;
   padding-right: 20px;
   padding-bottom: 40px;
@@ -640,6 +688,79 @@ textarea#notes-textarea {
 
 .status-msg.error {
   color: var(--ios-red);
+}
+
+/* 📊 STATISTICS KPI SECTION */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--ios-card-bg);
+  border: 1px solid var(--ios-card-border);
+  border-radius: var(--ios-radius-md);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-blue {
+  background: rgba(10, 132, 255, 0.15);
+  color: var(--ios-blue);
+}
+
+.icon-purple {
+  background: rgba(191, 90, 242, 0.15);
+  color: #BF5AF2; /* iOS Purple */
+}
+
+.icon-orange {
+  background: rgba(255, 159, 10, 0.15);
+  color: var(--ios-orange);
+}
+
+.icon-green {
+  background: rgba(48, 209, 88, 0.15);
+  color: var(--ios-green);
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ios-gray);
+  margin-top: 2px;
 }
 
 /* 📱 RESPONSIVENESS */
