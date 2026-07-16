@@ -1,6 +1,8 @@
 import { fetchRedditPosts } from './sources/reddit';
 import { fetchUpworkJobs } from './sources/upwork';
 import { fetchOutboundLeads } from './sources/outbound';
+import { fetchTwitterPosts } from './sources/twitter';
+import { fetchForumPosts } from './sources/forum';
 import { scorePost } from './scoring/gemini';
 import { initDb, isAlreadyProcessed, insertLead, markAsProcessed, closeDb, countLeads } from './storage/db';
 import { generateReport } from './report/generator';
@@ -37,6 +39,22 @@ async function main(): Promise<void> {
     allPosts.push(...upworkJobs);
   } catch (err: any) {
     console.error('[MAIN] ❌ Errore fatale Upwork (continuo):', err.message);
+  }
+
+  // Twitter
+  try {
+    const twitterPosts = await fetchTwitterPosts();
+    allPosts.push(...twitterPosts);
+  } catch (err: any) {
+    console.error('[MAIN] ❌ Errore fatale Twitter (continuo):', err.message);
+  }
+
+  // Forum (n8n + Make)
+  try {
+    const forumPosts = await fetchForumPosts();
+    allPosts.push(...forumPosts);
+  } catch (err: any) {
+    console.error('[MAIN] ❌ Errore fatale Forum (continuo):', err.message);
   }
 
   // Apollo Outbound

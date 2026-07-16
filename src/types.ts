@@ -2,7 +2,7 @@
 
 /** Post grezzo recuperato da una qualsiasi fonte */
 export interface RawPost {
-  source: 'reddit' | 'upwork' | 'outbound';
+  source: 'reddit' | 'upwork' | 'outbound' | 'twitter' | 'n8n_forum' | 'make_forum';
   id: string;
   url: string;
   title: string;

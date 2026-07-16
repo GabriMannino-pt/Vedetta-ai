@@ -5,161 +5,318 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vedetta AI — CRM & Leads Dashboard</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Lucide Icons for clean iOS-like outline symbols -->
+  <!-- Lucide Icons for outline symbols -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-  <!-- iOS-style Status Bar / Header -->
-  <header class="ios-header">
-    <div class="header-left">
-      <span class="app-icon">🔭</span>
-      <h1>Vedetta AI</h1>
-      <span class="badge-status">Online</span>
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <!-- Mint Green Glow Logo -->
+      <div class="logo-icon">🔭</div>
+      <span class="logo-text">Vedetta AI</span>
     </div>
-    <div class="header-right">
-      <!-- iOS Segmented Control to switch views -->
-      <div class="segmented-control">
-        <button class="segment-btn active" onclick="switchView('kanban')">Kanban</button>
-        <button class="segment-btn" onclick="switchView('list')">Tutti i Lead</button>
-      </div>
-      <button class="btn-refresh" onclick="refreshLeads()">
-        <i data-lucide="refresh-cw"></i>
+    
+    <nav class="sidebar-menu">
+      <button class="menu-item active" id="menu-overview" onclick="switchSidebarView('overview')">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Overview</span>
       </button>
+      <button class="menu-item" id="menu-leads" onclick="switchSidebarView('leads')">
+        <i data-lucide="check-square"></i>
+        <span>Qualified Leads</span>
+      </button>
+      <button class="menu-item" id="menu-settings" onclick="switchSidebarView('settings')">
+        <i data-lucide="settings"></i>
+        <span>Settings</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- TOP HEADER (GLOBAL NAVIGATION) -->
+  <header class="dashboard-header">
+    <div class="header-left-tabs">
+      <button class="tab-btn active" id="tab-inbound" onclick="switchSourceType('inbound')">Prospects</button>
+      <button class="tab-btn" id="tab-outbound" onclick="switchSourceType('outbound')">Campaigns</button>
+      <button class="tab-btn" onclick="alert('Funzionalità Intelligence in arrivo nella Fase 3!')">Intelligence</button>
+      <button class="tab-btn" onclick="alert('Funzionalità CRM Sync in arrivo nella Fase 3!')">CRM Sync</button>
+      <button class="tab-btn" onclick="switchSidebarView('settings')">Settings</button>
+    </div>
+    
+    <div class="header-right-actions">
+      <!-- Search Icon -->
+      <button class="header-icon-btn">
+        <i data-lucide="search"></i>
+      </button>
+      
+      <!-- Notifications Bell -->
+      <button class="header-icon-btn notification-bell" onclick="refreshLeads()">
+        <i data-lucide="bell"></i>
+        <span class="bell-dot"></span>
+      </button>
+      
+      <!-- User Profile Card -->
+      <div class="user-profile">
+        <div class="user-info">
+          <span class="user-name">Sarah Jenkins</span>
+          <span class="user-role">Sarah J.</span>
+        </div>
+        <img class="user-avatar" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100" alt="Avatar">
+      </div>
     </div>
   </header>
 
-  <!-- iOS-style Subheader for Source Switcher -->
-  <div class="ios-subheader">
-    <div class="source-segmented-control">
-      <button class="source-btn active" id="btn-source-inbound" onclick="switchSourceType('inbound')">📥 Inbound (Upwork/Reddit)</button>
-      <button class="source-btn" id="btn-source-outbound" onclick="switchSourceType('outbound')">📤 Outbound (B2B Italia)</button>
+  <!-- MAIN WORKSPACE -->
+  <main class="main-workspace">
+    
+    <div class="workspace-header">
+      <span class="workspace-subtitle">Vedetta AI Dashboard</span>
+      <h1 class="workspace-title" id="page-title">Overview</h1>
     </div>
-  </div>
 
-  <main class="ios-content">
-    
-    <!-- Statistics KPI Section -->
-    <section class="stats-container">
-      <div class="stat-card">
-        <div class="stat-icon icon-blue"><i data-lucide="users"></i></div>
-        <div class="stat-info">
-          <span class="stat-value" id="stat-total-leads">0</span>
-          <span class="stat-label">Total Leads</span>
+    <!-- VIEW 1: OVERVIEW (KANBAN & SPLIT DRAFT) -->
+    <div id="view-overview" class="view-section active">
+      
+      <!-- Statistics KPI Grid -->
+      <section class="stats-container">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Total Leads Found</span>
+            <i data-lucide="more-horizontal" class="stat-menu-icon"></i>
+          </div>
+          <div class="stat-value-group">
+            <span class="stat-value" id="stat-total-leads">0</span>
+            <span class="stat-change-badge">+12.3%</span>
+          </div>
         </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-purple"><i data-lucide="trending-up"></i></div>
-        <div class="stat-info">
-          <span class="stat-value" id="stat-avg-score">0.0</span>
-          <span class="stat-label">Avg Intent Score</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-orange"><i data-lucide="mail-open"></i></div>
-        <div class="stat-info">
-          <span class="stat-value" id="stat-active-deals">0</span>
-          <span class="stat-label">Active Deals</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon icon-green"><i data-lucide="party-popper"></i></div>
-        <div class="stat-info">
-          <span class="stat-value" id="stat-won-deals">0</span>
-          <span class="stat-label">Deals Won</span>
-        </div>
-      </div>
-    </section>
-    
-    <!-- View 1: KANBAN BOARD -->
-    <section id="view-kanban" class="dashboard-view active">
-      <div class="kanban-board">
         
-        <!-- Column 1: Nuovi -->
-        <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'nuovo')">
-          <div class="column-header">
-            <h2>Nuovi</h2>
-            <span class="column-count" id="count-nuovo">0</span>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Qualified Leads</span>
+            <i data-lucide="more-horizontal" class="stat-menu-icon"></i>
           </div>
-          <div class="column-cards" id="cards-nuovo"></div>
+          <div class="stat-value-group">
+            <span class="stat-value" id="stat-active-deals">0</span>
+            <span class="stat-change-badge">+18.7%</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Avg. Intent Score</span>
+            <i data-lucide="more-horizontal" class="stat-menu-icon"></i>
+          </div>
+          <div class="stat-value-group">
+            <span class="stat-value" id="stat-avg-score">0.0</span>
+            <span class="stat-total-denominator">/10</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Split Screen Layout -->
+      <div class="split-layout">
+        
+        <!-- Left Side: Kanban Board -->
+        <div class="split-left">
+          
+          <!-- Source/Platform Filter Selectors -->
+          <div class="platform-filter-bar">
+            <label for="platform-select">Piattaforma:</label>
+            <select id="platform-select" onchange="refreshLeads()">
+              <option value="all">Tutte le fonti</option>
+              <option value="upwork">Upwork 💼</option>
+              <option value="reddit">Reddit 🤖</option>
+              <option value="twitter">Twitter 🐦</option>
+              <option value="n8n_forum">n8n Forum 🔌</option>
+              <option value="make_forum">Make Forum 🔌</option>
+            </select>
+          </div>
+
+          <div class="kanban-board">
+            <!-- Column 1: Nuovi -->
+            <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'nuovo')">
+              <div class="column-header">
+                <h2>Nuovi</h2>
+                <span class="column-count" id="count-nuovo">0</span>
+              </div>
+              <div class="column-cards" id="cards-nuovo"></div>
+            </div>
+
+            <!-- Column 2: Contattati -->
+            <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'contattato')">
+              <div class="column-header">
+                <h2>Contattati</h2>
+                <span class="column-count" id="count-contattato">0</span>
+              </div>
+              <div class="column-cards" id="cards-contattato"></div>
+            </div>
+
+            <!-- Column 3: In Trattativa -->
+            <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'in_trattativa')">
+              <div class="column-header">
+                <h2>In Trattativa</h2>
+                <span class="column-count" id="count-in_trattativa">0</span>
+              </div>
+              <div class="column-cards" id="cards-in_trattativa"></div>
+            </div>
+
+            <!-- Column 4: Preventivo Inviato -->
+            <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'preventivo_inviato')">
+              <div class="column-header">
+                <h2>Preventivo</h2>
+                <span class="column-count" id="count-preventivo_inviato">0</span>
+              </div>
+              <div class="column-cards" id="cards-preventivo_inviato"></div>
+            </div>
+
+            <!-- Column 5: Vinti -->
+            <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'chiuso_vinto')">
+              <div class="column-header">
+                <h2>Vinti 🎉</h2>
+                <span class="column-count" id="count-chiuso_vinto">0</span>
+              </div>
+              <div class="column-cards" id="cards-chiuso_vinto"></div>
+            </div>
+          </div>
         </div>
 
-        <!-- Column 2: Contattati -->
-        <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'contattato')">
-          <div class="column-header">
-            <h2>Contattati</h2>
-            <span class="column-count" id="count-contattato">0</span>
-          </div>
-          <div class="column-cards" id="cards-contattato"></div>
-        </div>
+        <!-- Right Side: AI Outreach Drafts Card -->
+        <div class="split-right">
+          <div class="outreach-draft-card">
+            <div class="card-header">
+              <h2>AI Outreach Drafts</h2>
+              <i data-lucide="sparkles" class="draft-spark-icon"></i>
+            </div>
+            
+            <div id="draft-placeholder" class="draft-empty-state">
+              <i data-lucide="mouse-pointer-click"></i>
+              <p>Seleziona un lead dal Kanban o dalla lista per caricare la bozza di risposta intelligente di Gemini.</p>
+            </div>
 
-        <!-- Column 3: In Trattativa -->
-        <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'in_trattativa')">
-          <div class="column-header">
-            <h2>In Trattativa</h2>
-            <span class="column-count" id="count-in_trattativa">0</span>
-          </div>
-          <div class="column-cards" id="cards-in_trattativa"></div>
-        </div>
+            <div id="draft-content-panel" class="draft-active-panel" style="display: none;">
+              <div class="draft-recipient-info">
+                <span class="recipient-label">Destinatario:</span>
+                <span id="draft-recipient-name" class="recipient-value">-</span>
+              </div>
+              
+              <div class="draft-subject-line">
+                <span class="subject-label">Oggetto Email:</span>
+                <input type="text" id="draft-email-subject" value="Collaborazione Automazione n8n/Make">
+              </div>
 
-        <!-- Column 4: Preventivo Inviato -->
-        <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'preventivo_inviato')">
-          <div class="column-header">
-            <h2>Preventivo Inviato</h2>
-            <span class="column-count" id="count-preventivo_inviato">0</span>
-          </div>
-          <div class="column-cards" id="cards-preventivo_inviato"></div>
-        </div>
+              <div class="draft-textarea-wrapper">
+                <textarea id="draft-email-body" rows="12"></textarea>
+              </div>
 
-        <!-- Column 5: Chiusi Vinti -->
-        <div class="kanban-column" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'chiuso_vinto')">
-          <div class="column-header">
-            <h2>Vinti 🎉</h2>
-            <span class="column-count" id="count-chiuso_vinto">0</span>
+              <div class="draft-actions-bar">
+                <button class="draft-btn-action edit" onclick="copyDraftToClipboard()">
+                  <i data-lucide="copy"></i> Copia
+                </button>
+                <button class="draft-btn-action regenerate" onclick="openLeadSheetDirect()">
+                  <i data-lucide="edit-3"></i> Modifica Lead
+                </button>
+                <button class="draft-btn-action send" id="btn-send-draft-email" onclick="sendDraftEmailDirect()">
+                  <i data-lucide="send"></i> Invia Email
+                </button>
+              </div>
+              <div id="draft-send-status" class="status-msg"></div>
+            </div>
           </div>
-          <div class="column-cards" id="cards-chiuso_vinto"></div>
         </div>
 
       </div>
-    </section>
+    </div>
 
-    <!-- View 2: LIST VIEW -->
-    <section id="view-list" class="dashboard-view">
-      <div class="list-container">
-        <div class="list-actions">
-          <input type="text" id="search-input" placeholder="Cerca lead per titolo, settore, testo..." oninput="filterList()">
-          <select id="filter-status" onchange="filterList()">
-            <option value="all">Tutti gli stati</option>
-            <option value="nuovo">Nuovi</option>
-            <option value="contattato">Contattati</option>
-            <option value="in_trattativa">In Trattativa</option>
-            <option value="preventivo_inviato">Preventivo Inviato</option>
-            <option value="chiuso_vinto">Vinti</option>
-            <option value="chiuso_perso">Persi</option>
-          </select>
+    <!-- VIEW 2: LIST VIEW (PIPELINE TABLE CLONE) -->
+    <div id="view-leads" class="view-section">
+      <div class="pipeline-container">
+        
+        <div class="pipeline-filters-bar">
+          <div class="filter-group">
+            <i data-lucide="search" class="search-icon-inside"></i>
+            <input type="text" id="search-input" placeholder="Cerca lead per titolo, settore, testo..." oninput="filterList()">
+          </div>
+          
+          <div class="filter-group">
+            <select id="filter-status" onchange="filterList()">
+              <option value="all">Tutti gli stati</option>
+              <option value="nuovo">Nuovi</option>
+              <option value="contattato">Contattati</option>
+              <option value="in_trattativa">In Trattativa</option>
+              <option value="preventivo_inviato">Preventivo Inviato</option>
+              <option value="chiuso_vinto">Vinti</option>
+              <option value="chiuso_perso">Persi</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <select id="filter-source" onchange="filterList()">
+              <option value="all">Tutte le fonti</option>
+              <option value="upwork">Upwork 💼</option>
+              <option value="reddit">Reddit 🤖</option>
+              <option value="twitter">Twitter 🐦</option>
+              <option value="n8n_forum">n8n Forum 🔌</option>
+              <option value="make_forum">Make Forum 🔌</option>
+            </select>
+          </div>
         </div>
+
         <div class="table-wrapper">
           <table class="leads-table">
             <thead>
               <tr>
-                <th>Score</th>
-                <th>Titolo</th>
-                <th>Settore</th>
+                <th>Prospect Name / Title</th>
                 <th>Fonte</th>
-                <th>Data</th>
-                <th>Stato</th>
-                <th>Azione</th>
+                <th>Settore</th>
+                <th>Intent Score</th>
+                <th>Status</th>
+                <th>Last Activity</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="list-table-body"></tbody>
           </table>
         </div>
       </div>
-    </section>
+    </div>
+
+    <!-- VIEW 3: SETTINGS -->
+    <div id="view-settings" class="view-section">
+      <div class="settings-container">
+        <div class="settings-card">
+          <h2>Configurazione Credenziali</h2>
+          <p class="settings-desc">Configura i parametri del sistema e le credenziali di Gmail direttamente dalla dashboard.</p>
+          
+          <div class="settings-form">
+            <div class="input-group-row">
+              <div class="input-group">
+                <label>Password Dashboard</label>
+                <input type="password" id="settings-db-pwd" value="••••••••" readonly>
+              </div>
+            </div>
+            <div class="input-group-row">
+              <div class="input-group">
+                <label>Account Gmail Mittente</label>
+                <input type="email" id="settings-gmail-user" value="gabri.mannino.lavoro@gmail.com" readonly>
+              </div>
+              <div class="input-group">
+                <label>Password per le App (Gmail)</label>
+                <input type="password" id="settings-gmail-app-pwd" value="••••••••" readonly>
+              </div>
+            </div>
+            <div class="settings-info-alert">
+              <i data-lucide="info"></i>
+              <span>Per motivi di sicurezza, le credenziali memorizzate nel file <code>.env</code> possono essere modificate solo tramite terminale AWS.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </main>
 
-  <!-- iOS-style Sliding Sheet (Modal Detail Panel) -->
+  <!-- DETAIL MODAL SHEET -->
   <div id="lead-sheet-overlay" class="sheet-overlay" onclick="closeLeadSheet()"></div>
   <div id="lead-sheet" class="ios-sheet">
     <div class="sheet-handle" onclick="closeLeadSheet()"></div>
@@ -197,7 +354,7 @@
             </div>
             <div class="info-row">
               <span class="info-label">Link Originale:</span>
-              <a id="info-link" href="#" target="_blank" class="info-link">Apri Annuncio <i data-lucide="external-link" style="width: 14px; height: 14px; display: inline; vertical-align: middle;"></i></a>
+              <a id="info-link" href="#" target="_blank" class="info-link">Apri Annuncio <i data-lucide="external-link"></i></a>
             </div>
           </div>
 
@@ -248,29 +405,8 @@
             <h3>Bozza Risposta Generata</h3>
             <div id="info-bozza" class="text-block draft-box"></div>
             <button class="btn-primary" onclick="copyDraftToClipboard()">
-              <i data-lucide="copy" style="width: 16px; height: 16px; margin-right: 6px;"></i> Copia Bozza
+              <i data-lucide="copy"></i> Copia Bozza
             </button>
-          </div>
-
-          <!-- Email Sender Panel -->
-          <div class="card-section" id="email-sender-panel">
-            <h3>Invia Email (Gmail SMTP)</h3>
-            <div class="input-group">
-              <label for="email-to">A:</label>
-              <input type="email" id="email-to" readonly>
-            </div>
-            <div class="input-group">
-              <label for="email-subject">Oggetto:</label>
-              <input type="text" id="email-subject" value="Proposta di Automazione Workflow">
-            </div>
-            <div class="input-group">
-              <label for="email-body">Corpo del Messaggio:</label>
-              <textarea id="email-body" rows="8"></textarea>
-            </div>
-            <button class="btn-send-email" onclick="sendGmailEmail()">
-              <i data-lucide="send" style="width: 16px; height: 16px; margin-right: 6px;"></i> Invia Email
-            </button>
-            <div id="email-status" class="status-msg"></div>
           </div>
 
         </div>
