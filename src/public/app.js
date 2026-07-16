@@ -112,7 +112,7 @@ function updateStatistics() {
   
   document.getElementById('stat-total-leads').innerText = totalLeads.toLocaleString('it-IT');
   document.getElementById('stat-active-deals').innerText = activeDeals.toLocaleString('it-IT');
-  document.getElementById('stat-avg-score').innerText = `${avgScore}/10`;
+  document.getElementById('stat-avg-score').innerText = avgScore;
 }
 
 // Filtra i lead per Piattaforma/Fonte
