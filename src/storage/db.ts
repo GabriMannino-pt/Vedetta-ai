@@ -7,7 +7,7 @@ const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTI
 const DB_DIR = isServerless ? path.join('/tmp', '.data') : path.resolve(__dirname, '..', '..', '.data');
 const DB_PATH = path.join(DB_DIR, 'vedetta.db');
 
-let db: Database.Database | null = null;
+let db: Database.Database;
 
 /** Inizializza il database e crea le tabelle leads e prospects se non esistono */
 export function initDb(): void {
@@ -18,10 +18,7 @@ export function initDb(): void {
     db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');
   } catch (err: any) {
-    console.warn('[DB] Inizializzazione SQLite in memoria temporanea:', err.message);
-    try {
-      db = new Database(':memory:');
-    } catch {}
+    db = new Database(':memory:');
   }
 
   // Tabella Legacy / Social Scout Leads
