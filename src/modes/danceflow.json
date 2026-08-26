@@ -1,0 +1,60 @@
+{
+  "mode": "danceflow",
+  "product_name": "DanceFlow",
+  "target_market": "Scuole di danza, accademie di ballo, studi danza e associazioni sportive dilettantistiche (ASD/SSD)",
+  "country": "Italy",
+  "icp": {
+    "min_students": 50,
+    "max_students": 800,
+    "target_roles": ["Titolare", "Direttore Artistico", "Presidente ASD", "Segreteria"],
+    "target_geographies": [
+      "Milano", "Roma", "Torino", "Bologna", "Firenze", "Napoli", "Brescia", "Bergamo", "Verona", "Padova", "Genova", "Bari", "Palermo", "Catania", "Modena", "Reggio Emilia"
+    ]
+  },
+  "search_queries": [
+    "\"scuola di danza\" \"modulo di iscrizione\" pdf Milano",
+    "\"scuola di danza\" \"modulo di iscrizione\" pdf Roma",
+    "\"scuola di danza\" \"modulo iscrizione\" Torino OR Bologna",
+    "\"accademia di danza\" \"iscrizioni\" \"regolamento\" Firenze OR Napoli",
+    "\"scuola di danza\" \"bonifico bancario\" \"quote\" Brescia OR Bergamo",
+    "\"scuola di ballo\" \"segreteria\" \"orari corsi\" Verona OR Padova",
+    "\"scuola di danza\" \"scarica il modulo\" ASD",
+    "\"studio danza\" \"iscrizione online\" OR \"prenotazione lezioni\"",
+    "\"danza classica\" \"danza moderna\" \"corsi\" \"contatti\" Milano",
+    "\"accademia danza\" \"orari lezioni\" \"modulo\" Roma"
+  ],
+  "negative_keywords": [
+    "negozio abbigliamento danza", "scarpe da ballo vendita", "blog danza", "articoli danza", "federazione italiana danza sportiva concorsi", "teatro opera biglietti"
+  ],
+  "signals": [
+    {
+      "id": "pdf_form",
+      "description": "Presenza di modulo di iscrizione cartaceo/PDF scaricabile o da compilare a mano",
+      "pain_weight": 35
+    },
+    {
+      "id": "manual_payment",
+      "description": "Indicazione di bonifico manuale con IBAN esposto, contanti in segreteria o POS al desk per le rette mensili",
+      "pain_weight": 30
+    },
+    {
+      "id": "whatsapp_booking",
+      "description": "Prenotazione lezioni di prova, orari o comunicazioni gestite manualmente via WhatsApp o telefono",
+      "pain_weight": 20
+    },
+    {
+      "id": "no_portal",
+      "description": "Assenza di area riservata allievi o portale web moderno",
+      "pain_weight": 15
+    }
+  ],
+  "competitors": [
+    "Golee", "TeamUp", "Sportrick", "Mindbody", "BookyWay", "Wansport", "Fitmanager", "Blustudio"
+  ],
+  "scoring_weights": {
+    "fit": 0.35,
+    "pain": 0.35,
+    "intent": 0.15,
+    "value": 0.15
+  }
+}

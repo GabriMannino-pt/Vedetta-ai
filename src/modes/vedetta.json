@@ -1,0 +1,54 @@
+{
+  "mode": "vedetta",
+  "product_name": "Vedetta AI Sales OS",
+  "target_market": "Agenzie di Lead Generation, Agenzie Marketing B2B, Software House, Consulenti di Vendita e Founder B2B",
+  "country": "Italy",
+  "icp": {
+    "min_company_size": 2,
+    "max_company_size": 100,
+    "target_roles": ["Founder", "CEO", "Head of Sales", "B2B Marketing Director", "Business Development Manager"],
+    "target_geographies": ["Milano", "Roma", "Torino", "Bologna", "Padova", "Verona", "Brescia", "Genova", "Firenze", "Napoli"]
+  },
+  "search_queries": [
+    "\"agenzia lead generation b2b\" \"outbound\" Milano OR Roma",
+    "\"agenzia marketing b2b\" \"generazione lead\" \"contatti\" Torino OR Bologna",
+    "\"consulente vendite b2b\" \"sales pipeline\" \"acquisizione clienti\"",
+    "\"software house b2b\" \"soluzioni software\" \"contatti commerciali\" Milano",
+    "\"agenzia outbound\" \"email marketing b2b\" \"fissare appuntamenti\"",
+    "\"sviluppo commerciale b2b\" \"lead qualificati\" agenzia"
+  ],
+  "negative_keywords": [
+    "corso di formazione gratis", "stage vendite", "tesi di laurea", "wikipedia", "lavoro interinale"
+  ],
+  "signals": [
+    {
+      "id": "outbound_service",
+      "description": "Offerta esplicita di servizi outbound, cold email o lead generation per conto terzi",
+      "pain_weight": 35
+    },
+    {
+      "id": "manual_prospecting",
+      "description": "Utilizzo dichiarato di processi di ricerca manuale, LinkedIn Sales Navigator o liste statiche comprate",
+      "pain_weight": 30
+    },
+    {
+      "id": "sales_hiring",
+      "description": "Ricerca attiva di SDR, BDR o commerciali per prospezione fredda",
+      "pain_weight": 20
+    }
+  ],
+  "competitors": [
+    "Apollo.io", "Lemlist", "Clay.com", "Instantly.ai", "ZoomInfo", "Lusha", "Kaspr"
+  ],
+  "pricing": {
+    "estimated_mrr": 149,
+    "setup_fee": 300,
+    "default_probability": 0.25
+  },
+  "scoring_weights": {
+    "fit": 0.35,
+    "pain": 0.35,
+    "intent": 0.15,
+    "value": 0.15
+  }
+}

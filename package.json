@@ -4,10 +4,12 @@
   "description": "Automated lead scouting system for B2B automation services. Monitors Reddit and Upwork for real buying intent.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "scout": "npm run build && npm start",
+    "scout:danceflow": "ts-node src/scout_danceflow.ts",
+    "test:e2e": "node dist/test_suite_e2e.js",
     "crm": "npm run build && node dist/server.js"
   },
   "keywords": [
@@ -21,11 +23,15 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "@types/cheerio": "^0.22.35",
     "axios": "^1.7.9",
     "basic-auth": "^2.0.1",
     "better-sqlite3": "^11.7.0",
+    "cheerio": "^1.2.0",
     "dotenv": "^16.4.7",
     "express": "^5.2.1",
+    "firebase-admin": "^14.3.0",
+    "firebase-functions": "^7.3.2",
     "nodemailer": "^9.0.3",
     "rss-parser": "^3.13.0"
   },

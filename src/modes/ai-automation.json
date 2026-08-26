@@ -1,0 +1,54 @@
+{
+  "mode": "ai-automation",
+  "product_name": "AI Automation Agency (High-Ticket Services)",
+  "target_market": "Aziende italiane B2B ad alto volume di processi manuali: Cliniche e Poliambulatori, Agenzie Immobiliari strutturate, Logistica & Trasporti, Studi Commercialisti e Consulenti del Lavoro, E-commerce",
+  "country": "Italy",
+  "icp": {
+    "min_employees": 5,
+    "max_employees": 200,
+    "target_roles": ["Amministratore Delegato", "Direttore Operativo (COO)", "CFO / Responsabile Amministrativo", "Titolare"],
+    "target_geographies": ["Milano", "Roma", "Torino", "Bologna", "Brescia", "Bergamo", "Verona", "Padova", "Vicenza", "Treviso"]
+  },
+  "search_queries": [
+    "\"poliambulatorio\" OR \"clinica privata\" \"prenotazione visite\" \"contatti\" Milano OR Roma",
+    "\"agenzia immobiliare\" \"gestione annunci\" \"richiesta valutazione\" Torino OR Bologna",
+    "\"azienda logistica\" \"spedizioni\" \"richiesta preventivo\" Brescia OR Bergamo",
+    "\"studio commercialisti associati\" \"servizi alle imprese\" \"contatti\" Verona OR Padova",
+    "\"azienda fornitura b2b\" \"catalogo\" \"richiesta offerta\" Milano OR Vicenza",
+    "\"studio consulenza lavoro\" \"gestione buste paga\" \"contatti\" Bologna OR Modena"
+  ],
+  "negative_keywords": [
+    "ospedale pubblico asl", "comune di", "regione", "bando di concorso statale", "volontariato"
+  ],
+  "signals": [
+    {
+      "id": "manual_quote",
+      "description": "Richiesta preventivo gestita via form generico, email o telefono senza calcolatore o automazione immediata",
+      "pain_weight": 35
+    },
+    {
+      "id": "document_heavy",
+      "description": "Elevato flusso di documenti (fatture, contratti, referti, bolle, anagrafiche) inseriti a mano nel gestionale",
+      "pain_weight": 30
+    },
+    {
+      "id": "slow_followup",
+      "description": "Processo di follow-up commerciale o assistenza clienti basato su risposte manuali differite",
+      "pain_weight": 20
+    }
+  ],
+  "competitors": [
+    "Software House Custom", "Sviluppatori n8n/Make generici", "Grandi System Integrator"
+  ],
+  "pricing": {
+    "estimated_mrr": 450,
+    "setup_fee": 3500,
+    "default_probability": 0.20
+  },
+  "scoring_weights": {
+    "fit": 0.30,
+    "pain": 0.40,
+    "intent": 0.15,
+    "value": 0.15
+  }
+}
