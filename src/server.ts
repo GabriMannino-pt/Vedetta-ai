@@ -27,6 +27,31 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
+// Root Health Check per Vercel
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'Growth Studio — Sales Hub API',
+    version: '1.0.0',
+    sender: 'growthstudio.ai.sales@gmail.com',
+    endpoints: {
+      pending_approvals: '/api/outreach/pending',
+      sent_messages: '/api/outreach/sent',
+      stats: '/api/outreach/stats',
+      deals: '/api/deals',
+      portfolio: '/api/portfolio'
+    }
+  });
+});
+
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'Growth Studio — Sales Hub API',
+    version: '1.0.0'
+  });
+});
+
 // Middleware per Basic Auth (opzionale per chiamate API con header custom o bypass in dev)
 const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   // Se la richiesta proviene da browser interno con auth attiva
