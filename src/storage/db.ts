@@ -537,8 +537,10 @@ export function updateOutreachStatus(id: number, status: string, approvedAt?: st
 /** Chiude il db */
 export function closeDb(): void {
   if (db) {
-    db.close();
-    db = null;
+    try {
+      db.close();
+    } catch {}
+    db = null as any;
   }
 }
 
