@@ -3,21 +3,26 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Lead, DanceFlowProspect } from '../types';
 
-const DB_DIR = path.resolve(__dirname, '..', '..', '.data');
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DB_DIR = isServerless ? path.join('/tmp', '.data') : path.resolve(__dirname, '..', '..', '.data');
 const DB_PATH = path.join(DB_DIR, 'vedetta.db');
 
 let db: Database.Database | null = null;
 
 /** Inizializza il database e crea le tabelle leads e prospects se non esistono */
 export function initDb(): void {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+  try {
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
+    db = new Database(DB_PATH);
+    db.pragma('journal_mode = WAL');
+  } catch (err: any) {
+    console.warn('[DB] Inizializzazione SQLite in memoria temporanea:', err.message);
+    try {
+      db = new Database(':memory:');
+    } catch {}
   }
-
-  db = new Database(DB_PATH);
-
-  // WAL mode per performance migliori
-  db.pragma('journal_mode = WAL');
 
   // Tabella Legacy / Social Scout Leads
   db.exec(`
