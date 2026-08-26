@@ -75,45 +75,11 @@ const authMiddleware = (req: express.Request, res: express.Response, next: expre
 // ─────────────────────────────────────────────────────────────
 
 /** 1. GET /api/outreach/pending — Ottieni tutti i prospect pronti per l'approvazione */
-app.get('/api/outreach/pending', (req, res) => {
+app.get('/api/outreach/pending', async (req, res) => {
   try {
-    initDb();
-    const allProspects = getProspectsByMode();
-    const pMap = new Map(allProspects.map(p => [p.id, p]));
-    const messages = getOutreachMessagesByStatus('READY_FOR_APPROVAL');
+    const { getPendingOutreachList } = require('./storage/cloudStore');
+    const pendingList = await getPendingOutreachList();
 
-    const seen = new Set();
-    const pendingList: any[] = [];
-
-    messages.forEach(m => {
-      if (!seen.has(m.prospect_id)) {
-        seen.add(m.prospect_id);
-        const p = pMap.get(m.prospect_id);
-        if (p) {
-          pendingList.push({
-            id: m.id,
-            prospect_id: p.id,
-            mode: p.mode,
-            company_name: p.name,
-            city: p.city,
-            website: p.website,
-            email: p.email,
-            phone: p.phone,
-            channel: m.channel,
-            subject: m.subject,
-            content: m.content,
-            quality_score: m.quality_score,
-            status: m.status,
-            facts_used: m.quality_details?.facts_used || [],
-            evidences: p.evidences || [],
-            claims: m.claims || [],
-            created_at: m.created_at
-          });
-        }
-      }
-    });
-
-    closeDb();
     res.json({
       count: pendingList.length,
       kill_switch_active: isEmergencyKillSwitchActive,
@@ -140,56 +106,17 @@ app.post('/api/outreach/approve/:id', async (req, res) => {
   }
 
   try {
-    initDb();
-    const messages = getOutreachMessagesByStatus();
-    const targetMsg = messages.find(m => m.id === msgId);
+    const { executeOutreachApproval } = require('./storage/cloudStore');
+    const result = await executeOutreachApproval(msgId, editedContent, editedSubject);
 
-    if (!targetMsg) {
-      closeDb();
-      return res.status(404).json({ error: `Messaggio #${msgId} non trovato` });
+    if (!result.success) {
+      return res.status(500).json({ error: result.error });
     }
 
-    const allProspects = getProspectsByMode();
-    const prospect = allProspects.find(p => p.id === targetMsg.prospect_id);
-
-    if (!prospect) {
-      closeDb();
-      return res.status(404).json({ error: `Prospect associato non trovato` });
-    }
-
-    if (!prospect.email || !prospect.email.includes('@')) {
-      closeDb();
-      return res.status(400).json({ error: `Indirizzo email del destinatario assente o non valido per ${prospect.name}` });
-    }
-
-    // Se l'utente ha modificato il testo dalla dashboard
-    if (editedContent) targetMsg.content = editedContent;
-    if (editedSubject) targetMsg.subject = editedSubject;
-
-    // STEP 1: Registra stato APPROVED
-    const approvalTimestamp = new Date().toISOString();
-    updateOutreachStatus(msgId, 'APPROVED', approvalTimestamp);
-    targetMsg.status = 'APPROVED';
-    targetMsg.approved_at = approvalTimestamp;
-
-    console.log(`[APPROVAL] ✅ Approvato messaggio #${msgId} per "${prospect.name}" (${prospect.email})`);
-
-    // STEP 2: Esegui invio tramite Gmail
-    const sendResult = await sendApprovedEmail(targetMsg, prospect);
-
-    if (!sendResult.success) {
-      // Rollback stato se fallisce
-      updateOutreachStatus(msgId, 'READY_FOR_APPROVAL');
-      closeDb();
-      return res.status(500).json({ error: `Invio fallito: ${sendResult.error}` });
-    }
-
-    closeDb();
     return res.json({
       success: true,
-      message_id: targetMsg.id,
-      gmail_message_id: sendResult.messageId,
-      recipient: prospect.email,
+      message_id: msgId,
+      gmail_message_id: result.messageId,
       sent_at: new Date().toISOString()
     });
   } catch (err: any) {
