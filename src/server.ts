@@ -146,7 +146,13 @@ app.get('/api/outreach/sent', async (req, res) => {
   try {
     const { getSentOutreachList } = require('./storage/cloudStore');
     const result = await getSentOutreachList();
-    res.json({ count: result.length, sent: result });
+    res.json({
+      count: result.length,
+      sent: result,
+      prospects: result,
+      data: result,
+      items: result
+    });
   } catch (err: any) {
     console.error('[API] ❌ Errore sent outreach:', err.message);
     res.status(500).json({ error: err.message });
