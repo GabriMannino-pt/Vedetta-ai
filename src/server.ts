@@ -95,7 +95,8 @@ app.get('/api/outreach/pending', async (req, res) => {
 /** 2. POST /api/outreach/approve/:id — Sequenza Rigorosa di Approvazione & Invio Gmail */
 app.post('/api/outreach/approve/:id', async (req, res) => {
   const msgId = parseInt(req.params.id as string, 10);
-  const { editedContent, editedSubject } = req.body;
+  const editedContent = req.body.editedContent || req.body.body || req.body.content;
+  const editedSubject = req.body.editedSubject || req.body.subject;
 
   if (isNaN(msgId)) {
     return res.status(400).json({ error: 'ID messaggio non valido' });

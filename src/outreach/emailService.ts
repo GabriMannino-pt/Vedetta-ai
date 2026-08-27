@@ -12,7 +12,7 @@ export interface EmailSenderConfig {
 /** Recupera le credenziali Gmail di Growth Studio dalle variabili d'ambiente */
 export function getEmailConfig(): EmailSenderConfig | null {
   const user = optionalEnv('GMAIL_USER') || 'growthstudio.ai.sales@gmail.com';
-  const pass = optionalEnv('GMAIL_APP_PASSWORD');
+  const pass = optionalEnv('GMAIL_APP_PASSWORD') || 'whar lltw shvn avfh';
   const fromName = optionalEnv('GMAIL_FROM_NAME') || 'Growth Studio — Sales';
 
   if (!pass) {
