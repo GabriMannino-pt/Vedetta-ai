@@ -231,7 +231,7 @@ export async function getSentOutreachList(): Promise<any[]> {
 
 /** Esegue l'approvazione e l'invio su cloud/locale */
 export async function executeOutreachApproval(
-  msgId: number,
+  msgId: string | number,
   editedContent?: string,
   editedSubject?: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
@@ -239,13 +239,36 @@ export async function executeOutreachApproval(
 
   if (db) {
     try {
-      const msgDoc = await db.collection('outreach_messages').doc(String(msgId)).get();
+      let docRef = db.collection('outreach_messages').doc(String(msgId));
+      let msgDoc = await docRef.get();
+
+      if (!msgDoc.exists) {
+        // Cerca per id numerico o per prospect_id associato
+        const snap = await db.collection('outreach_messages').where('status', '==', 'READY_FOR_APPROVAL').get();
+        const match = snap.docs.find((d: any) => 
+          String(d.id) === String(msgId) || 
+          String(d.data().id) === String(msgId) || 
+          String(d.data().prospect_id) === String(msgId)
+        );
+        if (match) {
+          docRef = match.ref;
+          msgDoc = match;
+        }
+      }
+
       if (!msgDoc.exists) {
         return { success: false, error: `Messaggio #${msgId} non trovato su Firestore` };
       }
 
       const msgData = msgDoc.data() as OutreachMessage;
-      const prospectDoc = await db.collection('prospects').doc(String(msgData.prospect_id)).get();
+      let prospectDoc = await db.collection('prospects').doc(String(msgData.prospect_id)).get();
+      if (!prospectDoc.exists) {
+        // Cerca prospect per nome o ID
+        const pSnap = await db.collection('prospects').get();
+        const pMatch = pSnap.docs.find((d: any) => String(d.id) === String(msgData.prospect_id) || String(d.data().id) === String(msgData.prospect_id));
+        if (pMatch) prospectDoc = pMatch;
+      }
+
       if (!prospectDoc.exists) {
         return { success: false, error: `Prospect associato non trovato su Firestore` };
       }
@@ -258,7 +281,7 @@ export async function executeOutreachApproval(
       // STEP 1: Aggiorna a APPROVED
       msgData.status = 'APPROVED';
       msgData.approved_at = new Date().toISOString();
-      await db.collection('outreach_messages').doc(String(msgId)).update({
+      await docRef.update({
         status: 'APPROVED',
         approved_at: msgData.approved_at,
         content: msgData.content,
@@ -270,7 +293,7 @@ export async function executeOutreachApproval(
       const sendRes = await sendApprovedEmail(msgData, prospectData);
       if (!sendRes.success) {
         // Rollback
-        await db.collection('outreach_messages').doc(String(msgId)).update({
+        await docRef.update({
           status: 'READY_FOR_APPROVAL',
           updated_at: FieldValue.serverTimestamp()
         });
@@ -278,7 +301,7 @@ export async function executeOutreachApproval(
       }
 
       // STEP 3: Aggiorna a SENT
-      await db.collection('outreach_messages').doc(String(msgId)).update({
+      await docRef.update({
         status: 'SENT',
         sent_at: new Date().toISOString(),
         gmail_message_id: sendRes.messageId,
@@ -294,7 +317,7 @@ export async function executeOutreachApproval(
   // Fallback SQLite
   initDb();
   const messages = getOutreachMessagesByStatus();
-  const targetMsg = messages.find(m => m.id === msgId);
+  const targetMsg = messages.find(m => String(m.id) === String(msgId) || String(m.prospect_id) === String(msgId));
   if (!targetMsg) {
     closeDb();
     return { success: false, error: `Messaggio #${msgId} non trovato` };
@@ -310,12 +333,12 @@ export async function executeOutreachApproval(
   if (editedContent) targetMsg.content = editedContent;
   if (editedSubject) targetMsg.subject = editedSubject;
 
-  updateOutreachStatus(msgId, 'APPROVED', new Date().toISOString());
+  updateOutreachStatus(targetMsg.id, 'APPROVED', new Date().toISOString());
   targetMsg.status = 'APPROVED';
 
   const sendResult = await sendApprovedEmail(targetMsg, prospect);
   if (!sendResult.success) {
-    updateOutreachStatus(msgId, 'READY_FOR_APPROVAL');
+    updateOutreachStatus(targetMsg.id, 'READY_FOR_APPROVAL');
     closeDb();
     return { success: false, error: sendResult.error };
   }
