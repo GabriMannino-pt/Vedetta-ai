@@ -150,7 +150,9 @@ export function initDb(): void {
 }
 
 function getDb(): Database.Database {
-  if (!db) throw new Error('Database non inizializzato. Chiama initDb() prima.');
+  if (!db) {
+    initDb();
+  }
   return db;
 }
 
