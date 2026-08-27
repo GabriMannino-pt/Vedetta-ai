@@ -7,16 +7,16 @@ export function createDealFromProspect(prospect: ProspectLead): DealItem {
   let defaultProb = 0.20;
 
   if (prospect.mode === 'danceflow') {
-    defaultMrr = 79;
+    defaultMrr = 89;
     defaultSetup = 0;
     defaultProb = prospect.classification === 'A+' ? 0.35 : prospect.classification === 'A' ? 0.25 : 0.15;
   } else if (prospect.mode === 'vedetta') {
-    defaultMrr = 149;
-    defaultSetup = 300;
+    defaultMrr = 290;
+    defaultSetup = 500;
     defaultProb = prospect.classification === 'A+' ? 0.30 : prospect.classification === 'A' ? 0.20 : 0.10;
   } else if (prospect.mode === 'ai-automation') {
-    defaultMrr = 450;
-    defaultSetup = 3500;
+    defaultMrr = 500;
+    defaultSetup = 3000;
     defaultProb = prospect.classification === 'A+' ? 0.25 : prospect.classification === 'A' ? 0.18 : 0.10;
   }
 
