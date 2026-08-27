@@ -16,15 +16,24 @@ function initCloudFirestore(): any | null {
 
     const projectId = process.env.FIREBASE_PROJECT_ID || 'growth-studio-sales';
 
-    // 1. Controlla variabile d'ambiente con JSON della chiave di servizio (per Vercel)
+    // 1. Controlla variabile d'ambiente con JSON o Base64 della chiave di servizio
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
       try {
-        const creds = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        initializeApp({ credential: cert(creds), projectId: creds.project_id || projectId });
-        isFirestoreReady = true;
-        return getFirestore();
-      } catch (e) {
-        console.warn('[CLOUD-STORE] Errore parsing FIREBASE_SERVICE_ACCOUNT:', e);
+        let raw = process.env.FIREBASE_SERVICE_ACCOUNT.trim();
+        if (raw.startsWith('{')) {
+          const creds = JSON.parse(raw);
+          initializeApp({ credential: cert(creds), projectId: creds.project_id || projectId });
+          isFirestoreReady = true;
+          return getFirestore();
+        } else {
+          const decoded = Buffer.from(raw, 'base64').toString('utf-8');
+          const creds = JSON.parse(decoded);
+          initializeApp({ credential: cert(creds), projectId: creds.project_id || projectId });
+          isFirestoreReady = true;
+          return getFirestore();
+        }
+      } catch (e: any) {
+        console.warn('[CLOUD-STORE] Errore parsing FIREBASE_SERVICE_ACCOUNT:', e.message);
       }
     }
 
