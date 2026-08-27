@@ -80,9 +80,13 @@ export async function sendApprovedEmail(
     const info = await transporter.sendMail(mailOptions);
     const sentAt = new Date().toISOString();
 
-    // Aggiorna stato nel database a SENT
-    if (message.id) {
-      updateOutreachStatus(message.id, 'SENT', message.approved_at || sentAt);
+    // Aggiorna stato nel database locale se presente
+    try {
+      if (message.id) {
+        updateOutreachStatus(message.id, 'SENT', message.approved_at || sentAt);
+      }
+    } catch {
+      // In cloud mode, lo stato è già gestito da cloudStore su Firestore
     }
 
     console.log(`[EMAIL] ✉️  Inviata con successo a ${recipientEmail} (Message ID: ${info.messageId})`);
