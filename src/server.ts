@@ -142,30 +142,13 @@ app.post('/api/outreach/archive/:id', (req, res) => {
 });
 
 /** 4. GET /api/outreach/sent — Lista messaggi inviati */
-app.get('/api/outreach/sent', (req, res) => {
+app.get('/api/outreach/sent', async (req, res) => {
   try {
-    initDb();
-    const sentMessages = getOutreachMessagesByStatus('SENT');
-    const allProspects = getProspectsByMode();
-    const pMap = new Map(allProspects.map(p => [p.id, p]));
-
-    const result = sentMessages.map(m => {
-      const p = pMap.get(m.prospect_id);
-      return {
-        id: m.id,
-        company_name: p?.name || 'Azienda',
-        recipient: p?.email || '',
-        subject: m.subject,
-        content: m.content,
-        sent_at: m.sent_at || m.created_at,
-        channel: m.channel,
-        mode: p?.mode
-      };
-    });
-
-    closeDb();
+    const { getSentOutreachList } = require('./storage/cloudStore');
+    const result = await getSentOutreachList();
     res.json({ count: result.length, sent: result });
   } catch (err: any) {
+    console.error('[API] ❌ Errore sent outreach:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

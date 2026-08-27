@@ -156,6 +156,79 @@ export async function getPendingOutreachList(): Promise<any[]> {
   return pendingList;
 }
 
+/** Recupera i messaggi in stato SENT con fallback automatico */
+export async function getSentOutreachList(): Promise<any[]> {
+  const db = initCloudFirestore();
+
+  if (db) {
+    try {
+      const messagesSnap = await db.collection('outreach_messages').where('status', '==', 'SENT').get();
+      const prospectsSnap = await db.collection('prospects').get();
+
+      const pMap = new Map<number, any>();
+      prospectsSnap.docs.forEach((doc: any) => {
+        const data = doc.data();
+        pMap.set(data.id, data);
+      });
+
+      const sentList: any[] = [];
+      messagesSnap.docs.forEach((doc: any) => {
+        const m = doc.data();
+        const p = pMap.get(m.prospect_id);
+        sentList.push({
+          id: m.id || doc.id,
+          company_name: p?.name || 'Azienda',
+          company: p?.name || 'Azienda',
+          recipient: p?.email || '',
+          email: p?.email || '',
+          subject: m.subject || '',
+          content: m.content || '',
+          body: m.content || '',
+          sent_at: m.sent_at || m.created_at,
+          sentAt: m.sent_at || m.created_at,
+          channel: m.channel || 'email',
+          mode: p?.mode || 'vedetta',
+          product: p?.mode || 'vedetta',
+          opened: Boolean(m.opened),
+          replied: Boolean(m.replied)
+        });
+      });
+
+      return sentList;
+    } catch (err: any) {
+      console.warn('[CLOUD-STORE] Errore lettura messaggi inviati Firestore:', err.message);
+    }
+  }
+
+  // Fallback SQLite
+  initDb();
+  const sentMessages = getOutreachMessagesByStatus('SENT');
+  const allProspects = getProspectsByMode();
+  const pMap = new Map(allProspects.map(p => [p.id, p]));
+
+  const result = sentMessages.map(m => {
+    const p = pMap.get(m.prospect_id);
+    return {
+      id: m.id,
+      company_name: p?.name || 'Azienda',
+      company: p?.name || 'Azienda',
+      recipient: p?.email || '',
+      email: p?.email || '',
+      subject: m.subject,
+      content: m.content,
+      body: m.content,
+      sent_at: m.sent_at || m.created_at,
+      sentAt: m.sent_at || m.created_at,
+      channel: m.channel,
+      mode: p?.mode,
+      product: p?.mode
+    };
+  });
+
+  closeDb();
+  return result;
+}
+
 /** Esegue l'approvazione e l'invio su cloud/locale */
 export async function executeOutreachApproval(
   msgId: number,
