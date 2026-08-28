@@ -20,7 +20,7 @@ export function generateFollowUpPlan(
 
   if (currentStage === 'FOLLOW_UP_1') {
     return {
-      prospect_id: prospect.id,
+      prospect_id: prospect.id || 0,
       stage: 'FOLLOW_UP_1',
       scheduled_delay_days: 3,
       suggested_subject: `Re: ${previousMessage.subject || `Iscrizioni e corsi per ${name}`}`,
@@ -31,7 +31,7 @@ export function generateFollowUpPlan(
 
   if (currentStage === 'FOLLOW_UP_2') {
     return {
-      prospect_id: prospect.id,
+      prospect_id: prospect.id || 0,
       stage: 'FOLLOW_UP_2',
       scheduled_delay_days: 7,
       suggested_subject: `Un esempio pratico per ${name}`,
@@ -41,7 +41,7 @@ export function generateFollowUpPlan(
   }
 
   return {
-    prospect_id: prospect.id,
+    prospect_id: prospect.id || 0,
     stage: 'FINAL_FOLLOW_UP',
     scheduled_delay_days: 14,
     suggested_subject: `Ultimo aggiornamento per ${name}`,
