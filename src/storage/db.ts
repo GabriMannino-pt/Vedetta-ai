@@ -157,7 +157,7 @@ export function initDb(): void {
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
 
-function getDb(): Database.Database {
+export function getDb(): Database.Database {
   if (!db) {
     initDb();
   }

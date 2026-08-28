@@ -1,5 +1,4 @@
-import Database from 'better-sqlite3';
-import { initDb, closeDb } from '../storage/db';
+import { getDb } from '../storage/db';
 import {
   Experiment,
   ExperimentVariant,
@@ -8,19 +7,9 @@ import {
   DataTag,
   ExperimentStatus,
 } from '../types';
-import * as path from 'path';
-import * as fs from 'fs';
 
-const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-const DB_DIR = isServerless ? path.join('/tmp', '.data') : path.resolve(__dirname, '..', '..', '.data');
-const DB_PATH = path.join(DB_DIR, 'vedetta.db');
-
-function getDatabase(): Database.Database {
-  initDb();
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
-  }
-  return new Database(DB_PATH);
+function getDatabase() {
+  return getDb();
 }
 
 /** Crea un nuovo esperimento A/B/C controllato */
