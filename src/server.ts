@@ -55,9 +55,8 @@ app.get('/api', (req, res) => {
 // Middleware per Basic Auth (opzionale per chiamate API con header custom o bypass in dev)
 const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   // Se la richiesta proviene da browser interno con auth attiva
-  const authHeader = req.headers.authorization;
-  if (!authHeader && req.path.startsWith('/api/outreach')) {
-    // Consenti accesso alle API di outreach per il frontend Lovable
+  // Consenti accesso a tutti gli endpoint REST API per Lovable e client esterni
+  if (!authHeader && req.path.startsWith('/api')) {
     return next();
   }
 
