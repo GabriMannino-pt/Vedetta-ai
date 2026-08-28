@@ -295,3 +295,210 @@ export interface AppConfig {
     maxLeadsInReport: number;
   };
 }
+
+// ─────────────────────────────────────────────────────────────
+// 💰 VEDETTA 1.1 — REVENUE OS & EXPERIMENT ENGINE TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type DataTag = 'LIVE' | 'SIMULATED' | 'INSUFFICIENT_DATA';
+
+export type ExperimentStatus =
+  | 'DRAFT'
+  | 'RUNNING'
+  | 'INSUFFICIENT_DATA'
+  | 'WINNER_FOUND'
+  | 'PAUSED'
+  | 'FAILED'
+  | 'COMPLETED';
+
+export type ExperimentVariantType = 'A' | 'B' | 'C' | 'CONTROL';
+
+export interface Experiment {
+  id: string;
+  product: string;
+  name: string;
+  hypothesis: string;
+  status: ExperimentStatus;
+  start_date: string;
+  end_date?: string;
+  min_sample_size: number;
+  winner_variant_id?: string;
+  leading_variant_id?: string;
+  is_statistically_significant: boolean;
+  data_tag: DataTag;
+}
+
+export interface ExperimentVariant {
+  id: string;
+  experiment_id: string;
+  name: string;
+  type: ExperimentVariantType;
+  opening_hook: string;
+  cta_type: string;
+  offer_type: string;
+  template_content?: string;
+}
+
+export interface ExperimentAssignment {
+  id?: number;
+  experiment_id: string;
+  variant_id: string;
+  prospect_id: number;
+  assigned_at: string;
+  channel: string;
+  segment: string;
+  product: string;
+}
+
+export interface ExperimentEvent {
+  id?: number;
+  experiment_id: string;
+  variant_id: string;
+  prospect_id: number;
+  event_type:
+    | 'EMAIL_SENT'
+    | 'OPENED'
+    | 'REPLIED'
+    | 'POSITIVE_REPLY'
+    | 'DEMO_BOOKED'
+    | 'PROPOSAL_SENT'
+    | 'DEAL_WON'
+    | 'CASH_COLLECTED';
+  value?: number;
+  metadata?: Record<string, any>;
+  created_at: string;
+  data_tag: DataTag;
+}
+
+export interface ExperimentScorecard {
+  variant_id: string;
+  variant_name: string;
+  sample_size: number;
+  emails_sent: number;
+  replies: number;
+  positive_replies: number;
+  demos: number;
+  proposals: number;
+  won: number;
+  cash_collected: number;
+  reply_rate: number;
+  positive_reply_rate: number;
+  demo_rate: number;
+  close_rate: number;
+  revenue_per_prospect: number;
+  revenue_per_100_prospects: number;
+  status: 'WINNER' | 'LEADING' | 'INSUFFICIENT_DATA' | 'LOSING';
+}
+
+export type RevenueFunnelStage =
+  | 'DISCOVERED'
+  | 'QUALIFIED'
+  | 'CONTACTED'
+  | 'REPLIED'
+  | 'POSITIVE_REPLY'
+  | 'DEMO'
+  | 'PROPOSAL'
+  | 'NEGOTIATION'
+  | 'WON'
+  | 'PAYMENT_PENDING'
+  | 'PAYMENT_RECEIVED'
+  | 'LOST'
+  | 'NURTURE';
+
+export type PaymentStatus = 'PENDING' | 'RECEIVED' | 'FAILED' | 'REFUNDED';
+
+export interface RevenueAttribution {
+  product: string;
+  campaign: string;
+  experiment_id?: string;
+  variant_id?: string;
+  segment?: string;
+  channel: string;
+  prospect_id: number;
+  first_contact_date?: string;
+}
+
+export interface ExtendedDeal {
+  id?: number;
+  prospect_id: number;
+  project_name: string;
+  company_name: string;
+  stage: RevenueFunnelStage;
+  deal_value: number;
+  setup_fee: number;
+  potential_mrr: number;
+  potential_arr: number;
+  probability_percent: number;
+  weighted_value: number;
+  cash_collected: number;
+  payment_status: PaymentStatus;
+  won_date?: string;
+  lost_reason?: string;
+  attribution?: RevenueAttribution;
+  data_tag: DataTag;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RevenueEvent {
+  id?: number;
+  deal_id: number;
+  amount: number;
+  payment_type: 'SETUP' | 'RECURRING_MRR' | 'ONE_TIME';
+  status: PaymentStatus;
+  received_at: string;
+  transaction_ref?: string;
+  attribution?: RevenueAttribution;
+  data_tag: DataTag;
+}
+
+export interface DailySalesTask {
+  id: string;
+  priority_level: 1 | 2 | 3 | 4 | 5;
+  title: string;
+  reason: string;
+  expected_value: number;
+  urgency: 'ALTA' | 'MEDIA' | 'BASSA';
+  action_type:
+    | 'FOLLOW_UP_POSITIVE'
+    | 'PREPARE_DEMO'
+    | 'APPROVE_OUTREACH'
+    | 'ANALYZE_EXPERIMENT'
+    | 'STOP_EFFORT'
+    | 'COLLECT_PAYMENT';
+  prospect_id?: number;
+  deal_id?: number;
+  status: 'PENDING' | 'DONE' | 'SKIPPED';
+  created_at: string;
+}
+
+export interface LearningInsight {
+  id: string;
+  product: string;
+  pattern_type: 'SEGMENT' | 'EVIDENCE' | 'OPENING' | 'CTA' | 'OFFER' | 'CHANNEL';
+  observation: string;
+  confidence_percent: number;
+  recommendation: 'SCALE' | 'ITERATE' | 'PAUSE' | 'ABANDON';
+  evidence_data?: Record<string, any>;
+  created_at: string;
+  data_tag: DataTag;
+}
+
+export interface ProductCommercialScores {
+  product_id: string;
+  name: string;
+  theoretical_score: number; // 0-100
+  proven_score: number;      // 0-100
+  real_cash_collected: number;
+  total_deals_won: number;
+  decision: '🚀 SCALE' | '🧪 VALIDATE' | '🔧 ITERATE' | '⏸ PAUSE' | '❌ ABANDON';
+  decision_reason: string;
+  metrics: {
+    prospects_contacted: number;
+    replies: number;
+    demos: number;
+    conversion_rate: number;
+  };
+  data_tag: DataTag;
+}
+

@@ -317,6 +317,191 @@ app.post('/api/email/send', authMiddleware, async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// 💰 VEDETTA 1.1 — REVENUE OS & EXPERIMENT ENGINE REST API
+// ─────────────────────────────────────────────────────────────
+
+// 1. GET /api/revenue/dashboard
+app.get('/api/revenue/dashboard', (req, res) => {
+  try {
+    const { calculateRevenueDashboard } = require('./revenue/metricsEngine');
+    const dataTag = (req.query.tag as any) || 'LIVE';
+    const data = calculateRevenueDashboard(dataTag);
+    res.json({ success: true, data });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. GET /api/revenue/forecast
+app.get('/api/revenue/forecast', (req, res) => {
+  try {
+    const { calculateRevenueForecast } = require('./revenue/forecastEngine');
+    const dataTag = (req.query.tag as any) || 'LIVE';
+    const data = calculateRevenueForecast(dataTag);
+    res.json({ success: true, data });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. POST /api/revenue/payment (Registra incasso reale)
+app.post('/api/revenue/payment', (req, res) => {
+  try {
+    const { recordCashPayment } = require('./revenue/revenueEngine');
+    const payment = recordCashPayment(req.body);
+    res.json({ success: true, payment });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. GET /api/experiments (Lista esperimenti con scorecard)
+app.get('/api/experiments', (req, res) => {
+  try {
+    const { listExperiments } = require('./experiments/experimentEngine');
+    const { calculateExperimentScorecards } = require('./experiments/experimentMetrics');
+    const { evaluateExperimentRules } = require('./experiments/experimentRules');
+    const dataTag = (req.query.tag as any) || 'LIVE';
+    const product = req.query.product as string;
+
+    const exps = listExperiments(product, dataTag);
+    const enriched = exps.map((e: any) => {
+      const scorecards = calculateExperimentScorecards(e.id, dataTag);
+      const evalRes = evaluateExperimentRules(e, scorecards);
+      return {
+        ...e,
+        status: evalRes.status,
+        winner_variant_id: evalRes.winner_variant_id,
+        leading_variant_id: evalRes.leading_variant_id,
+        recommendation: evalRes.recommendation,
+        scorecards: evalRes.scorecards,
+      };
+    });
+
+    res.json({ success: true, count: enriched.length, experiments: enriched });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. POST /api/experiments (Crea nuovo esperimento A/B/C)
+app.post('/api/experiments', (req, res) => {
+  try {
+    const { createExperiment } = require('./experiments/experimentEngine');
+    const { experiment, variants } = req.body;
+    const created = createExperiment(experiment, variants);
+    res.json({ success: true, experiment: created });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. GET /api/experiments/:id (Dettaglio esperimento)
+app.get('/api/experiments/:id', (req, res) => {
+  try {
+    const { getExperiment } = require('./experiments/experimentEngine');
+    const { calculateExperimentScorecards } = require('./experiments/experimentMetrics');
+    const { evaluateExperimentRules } = require('./experiments/experimentRules');
+    const expId = req.params.id;
+    const dataTag = (req.query.tag as any) || 'LIVE';
+
+    const expData = getExperiment(expId);
+    if (!expData.experiment) {
+      return res.status(404).json({ error: 'Esperimento non trovato' });
+    }
+
+    const scorecards = calculateExperimentScorecards(expId, dataTag);
+    const evalRes = evaluateExperimentRules(expData.experiment, scorecards);
+
+    res.json({
+      success: true,
+      experiment: {
+        ...expData.experiment,
+        status: evalRes.status,
+        winner_variant_id: evalRes.winner_variant_id,
+        leading_variant_id: evalRes.leading_variant_id,
+        recommendation: evalRes.recommendation,
+      },
+      variants: expData.variants,
+      scorecards: evalRes.scorecards,
+      assignments_count: expData.assignmentsCount,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 7. POST /api/experiments/event (Registra evento funnel)
+app.post('/api/experiments/event', (req, res) => {
+  try {
+    const { recordExperimentEvent } = require('./experiments/experimentEngine');
+    const event = recordExperimentEvent(req.body);
+    res.json({ success: true, event });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 8. GET /api/learning/insights (Pattern e raccomandazioni)
+app.get('/api/learning/insights', (req, res) => {
+  try {
+    const { runLearningCycle } = require('./learning/learningEngine');
+    const { generateCommercialDirectives } = require('./learning/recommendationEngine');
+    const { calculateProductCommercialScores } = require('./portfolio/productScorer');
+    const dataTag = (req.query.tag as any) || 'LIVE';
+    const product = req.query.product as string;
+
+    const insights = runLearningCycle(product, dataTag);
+    const productScores = calculateProductCommercialScores(dataTag);
+    const directives = generateCommercialDirectives(productScores, insights);
+
+    res.json({
+      success: true,
+      insights,
+      directives,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 9. GET /api/products/commercial-scores (Theoretical vs Proven score)
+app.get('/api/products/commercial-scores', (req, res) => {
+  try {
+    const { generatePortfolioDecisionReport } = require('./portfolio/productDecisionEngine');
+    const dataTag = (req.query.tag as any) || 'LIVE';
+    const report = generatePortfolioDecisionReport(dataTag);
+    res.json({ success: true, report });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 10. GET /api/sales/today (Daily Actions ordinate per Expected Value)
+app.get('/api/sales/today', (req, res) => {
+  try {
+    const { getDailySalesActions } = require('./sales/dailyActionEngine');
+    const dataTag = (req.query.tag as any) || 'LIVE';
+    const tasks = getDailySalesActions(dataTag);
+    res.json({ success: true, count: tasks.length, tasks });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 11. POST /api/sales/reply-classify (AI Reply Classifier)
+app.post('/api/sales/reply-classify', (req, res) => {
+  try {
+    const { classifyInboundReply } = require('./sales/replyIntelligence');
+    const { text, prospectName, product } = req.body;
+    const classification = classifyInboundReply(text, prospectName, product);
+    res.json({ success: true, classification });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. File Statici: Serviamo la Dashboard Web (HTML/JS)
 app.use(express.static(path.join(__dirname, '..', 'src', 'public')));
 
