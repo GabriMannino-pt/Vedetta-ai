@@ -146,6 +146,14 @@ export function initDb(): void {
   try { db.exec("ALTER TABLE leads ADD COLUMN notes TEXT"); } catch {}
   try { db.exec("ALTER TABLE leads ADD COLUMN tipo TEXT NOT NULL DEFAULT 'inbound'"); } catch {}
 
+  // Migrazioni Vedetta 1.1 (Experiments, Revenue, Learning, Product Scores)
+  try {
+    const { runMigrations1_1 } = require('./migrations_1_1');
+    runMigrations1_1(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.1 warning:', e.message);
+  }
+
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
 
