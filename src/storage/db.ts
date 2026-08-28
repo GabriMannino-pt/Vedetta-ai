@@ -158,7 +158,7 @@ export function initDb(): void {
 }
 
 export function getDb(): Database.Database {
-  if (!db) {
+  if (!db || !db.open) {
     initDb();
   }
   return db;
@@ -546,7 +546,9 @@ export function updateOutreachStatus(id: number, status: string, approvedAt?: st
 
 /** Chiude il db */
 export function closeDb(): void {
-  if (db) {
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  if (isServerless) return;
+  if (db && db.open) {
     try {
       db.close();
     } catch {}
