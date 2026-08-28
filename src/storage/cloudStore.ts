@@ -84,6 +84,17 @@ export async function getPendingOutreachList(): Promise<any[]> {
           seen.add(m.prospect_id);
           const p = pMap.get(m.prospect_id);
           if (p) {
+            let fallbackEmail = p.email || p.contact_email || m.recipient || m.email;
+            if (!fallbackEmail && p.website) {
+              try {
+                const u = new URL(p.website.startsWith('http') ? p.website : 'https://' + p.website);
+                const domain = u.hostname.replace(/^www\./, '');
+                if (domain && domain.includes('.')) {
+                  fallbackEmail = `info@${domain}`;
+                }
+              } catch {}
+            }
+
             pendingList.push({
               id: m.id || doc.id,
               prospect_id: p.id,
@@ -91,7 +102,8 @@ export async function getPendingOutreachList(): Promise<any[]> {
               company_name: p.name,
               city: p.city,
               website: p.website,
-              email: p.email,
+              email: fallbackEmail,
+              recipient: fallbackEmail,
               phone: p.phone,
               channel: m.channel,
               subject: m.subject,
@@ -233,7 +245,8 @@ export async function getSentOutreachList(): Promise<any[]> {
 export async function executeOutreachApproval(
   msgId: string | number,
   editedContent?: string,
-  editedSubject?: string
+  editedSubject?: string,
+  editedRecipient?: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const db = initCloudFirestore();
 
@@ -278,6 +291,21 @@ export async function executeOutreachApproval(
       if (editedContent) msgData.content = editedContent;
       if (editedSubject) msgData.subject = editedSubject;
 
+      // Risolvi indirizzo email del destinatario
+      let targetEmail = editedRecipient || prospectData.email || prospectData.contact_email || (msgData as any).recipient;
+      if (!targetEmail && (prospectData.website || (prospectData as any).website_url)) {
+        try {
+          const rawUrl = prospectData.website || (prospectData as any).website_url;
+          const u = new URL(rawUrl.startsWith('http') ? rawUrl : 'https://' + rawUrl);
+          const domain = u.hostname.replace(/^www\./, '');
+          if (domain && domain.includes('.')) {
+            targetEmail = `info@${domain}`;
+          }
+        } catch {}
+      }
+      prospectData.email = targetEmail;
+      (msgData as any).recipient = targetEmail;
+
       // STEP 1: Aggiorna a APPROVED
       msgData.status = 'APPROVED';
       msgData.approved_at = new Date().toISOString();
@@ -286,6 +314,7 @@ export async function executeOutreachApproval(
         approved_at: msgData.approved_at,
         content: msgData.content,
         subject: msgData.subject || '',
+        recipient: targetEmail || '',
         updated_at: FieldValue.serverTimestamp()
       });
 

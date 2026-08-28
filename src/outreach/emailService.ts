@@ -47,11 +47,17 @@ export async function sendApprovedEmail(
     };
   }
 
-  const recipientEmail = prospect.email;
+  const recipientEmail =
+    prospect.email ||
+    prospect.contact_email ||
+    (prospect as any).recipient ||
+    (message as any).recipient ||
+    (message as any).email;
+
   if (!recipientEmail || !recipientEmail.includes('@')) {
     return {
       success: false,
-      error: `Indirizzo email del destinatario non valido o assente per ${prospect.name}.`
+      error: `Indirizzo email del destinatario non valido o assente per ${prospect.name || 'il prospect'}. Verifica il campo email prima di inviare.`
     };
   }
 

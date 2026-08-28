@@ -93,8 +93,9 @@ app.get('/api/outreach/pending', async (req, res) => {
 /** 2. POST /api/outreach/approve/:id — Sequenza Rigorosa di Approvazione & Invio Gmail */
 app.post('/api/outreach/approve/:id', async (req, res) => {
   const msgId = req.params.id as string;
-  const editedContent = req.body.editedContent || req.body.body || req.body.content;
-  const editedSubject = req.body.editedSubject || req.body.subject;
+  const editedContent = req.body?.editedContent || req.body?.body || req.body?.content;
+  const editedSubject = req.body?.editedSubject || req.body?.subject;
+  const editedRecipient = req.body?.editedRecipient || req.body?.recipient || req.body?.email;
 
   if (!msgId) {
     return res.status(400).json({ error: 'ID messaggio non valido' });
@@ -106,10 +107,10 @@ app.post('/api/outreach/approve/:id', async (req, res) => {
 
   try {
     const { executeOutreachApproval } = require('./storage/cloudStore');
-    const result = await executeOutreachApproval(msgId, editedContent, editedSubject);
+    const result = await executeOutreachApproval(msgId, editedContent, editedSubject, editedRecipient);
 
     if (!result.success) {
-      return res.status(500).json({ error: result.error });
+      return res.status(400).json({ success: false, error: result.error });
     }
 
     return res.json({
