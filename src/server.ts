@@ -212,19 +212,23 @@ app.get('/api/deals', async (req, res) => {
     const sent = await getSentOutreachList();
 
     // Genera deal ESCLUSIVAMENTE dai prospect reali inviati da Gmail
-    const deals: any[] = sent.map((s: any, idx: number) => ({
-      id: String(s.id || 100 + idx),
-      company: s.company || s.company_name || 'Azienda',
-      company_name: s.company || s.company_name || 'Azienda',
-      product: s.mode || s.product || 'danceflow',
-      mode: s.mode || s.product || 'danceflow',
-      stage: 'outreach',
-      value: s.mode === 'danceflow' ? 1068 : 3980,
-      deal_value: s.mode === 'danceflow' ? 1068 : 3980,
-      updatedAt: s.sent_at ? s.sent_at.slice(0, 10) : '2026-08-28',
-      updated_at: s.sent_at ? s.sent_at.slice(0, 10) : '2026-08-28',
-      owner: 'Gabriele'
-    }));
+    const deals: any[] = sent.map((s: any, idx: number) => {
+      const prod = String(s.mode || s.product || 'danceflow').toLowerCase();
+      const val = prod.includes('danceflow') ? 1068 : prod.includes('ai') ? 9000 : 3980;
+      return {
+        id: String(s.id || 100 + idx),
+        company: s.company || s.company_name || 'Azienda',
+        company_name: s.company || s.company_name || 'Azienda',
+        product: prod.includes('danceflow') ? 'danceflow' : prod.includes('ai') ? 'ai-automation' : 'vedetta',
+        mode: prod.includes('danceflow') ? 'danceflow' : prod.includes('ai') ? 'ai-automation' : 'vedetta',
+        stage: 'outreach',
+        value: val,
+        deal_value: val,
+        updatedAt: s.sent_at ? s.sent_at.slice(0, 10) : '2026-08-28',
+        updated_at: s.sent_at ? s.sent_at.slice(0, 10) : '2026-08-28',
+        owner: 'Gabriele'
+      };
+    });
 
     res.json({
       success: true,
