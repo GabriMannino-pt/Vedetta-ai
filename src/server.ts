@@ -510,7 +510,13 @@ app.get('/api/experiments', (req, res) => {
       };
     });
 
-    res.json({ success: true, count: enriched.length, experiments: enriched });
+    res.json({
+      success: true,
+      count: enriched.length,
+      experiments: enriched,
+      data: enriched,
+      items: enriched
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -591,6 +597,8 @@ app.get('/api/learning/insights', (req, res) => {
       success: true,
       insights,
       directives,
+      data: { insights, directives },
+      items: directives
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -603,7 +611,7 @@ app.get('/api/products/commercial-scores', (req, res) => {
     const { generatePortfolioDecisionReport } = require('./portfolio/productDecisionEngine');
     const dataTag = (req.query.tag as any) || 'LIVE';
     const report = generatePortfolioDecisionReport(dataTag);
-    res.json({ success: true, report });
+    res.json({ success: true, report, data: report });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -615,7 +623,13 @@ app.get('/api/sales/today', (req, res) => {
     const { getDailySalesActions } = require('./sales/dailyActionEngine');
     const dataTag = (req.query.tag as any) || 'LIVE';
     const tasks = getDailySalesActions(dataTag);
-    res.json({ success: true, count: tasks.length, tasks });
+    res.json({
+      success: true,
+      count: tasks.length,
+      tasks,
+      data: tasks,
+      items: tasks
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
