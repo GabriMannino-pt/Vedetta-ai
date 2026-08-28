@@ -89,7 +89,9 @@ export interface ProspectLead {
   name: string;
   city: string;
   website: string;
+  website_url?: string;
   email: string | null;
+  contact_email?: string | null;
   phone: string | null;
   social: string | null;
   estimated_size: string;
