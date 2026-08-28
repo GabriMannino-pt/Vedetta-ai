@@ -177,30 +177,39 @@ export async function getSentOutreachList(): Promise<any[]> {
       const messagesSnap = await db.collection('outreach_messages').where('status', '==', 'SENT').get();
       const prospectsSnap = await db.collection('prospects').get();
 
-      const pMap = new Map<number, any>();
+      const pMap = new Map<string | number, any>();
       prospectsSnap.docs.forEach((doc: any) => {
         const data = doc.data();
-        pMap.set(data.id, data);
+        if (data.id !== undefined) {
+          pMap.set(data.id, data);
+          pMap.set(String(data.id), data);
+          pMap.set(Number(data.id), data);
+        }
+        pMap.set(doc.id, data);
       });
 
       const sentList: any[] = [];
       messagesSnap.docs.forEach((doc: any) => {
         const m = doc.data();
-        const p = pMap.get(m.prospect_id);
+        const p = pMap.get(m.prospect_id) || pMap.get(String(m.prospect_id)) || pMap.get(Number(m.prospect_id));
+        const targetEmail = m.recipient || m.email || p?.email || p?.contact_email || '';
+        const targetCompany = p?.name || p?.company_name || m.company_name || m.company || 'Azienda';
+        const targetMode = p?.mode || p?.product || m.mode || m.product || 'danceflow';
+
         sentList.push({
           id: m.id || doc.id,
-          company_name: p?.name || 'Azienda',
-          company: p?.name || 'Azienda',
-          recipient: p?.email || '',
-          email: p?.email || '',
+          company_name: targetCompany,
+          company: targetCompany,
+          recipient: targetEmail,
+          email: targetEmail,
           subject: m.subject || '',
           content: m.content || '',
           body: m.content || '',
           sent_at: m.sent_at || m.created_at,
           sentAt: m.sent_at || m.created_at,
           channel: m.channel || 'email',
-          mode: p?.mode || 'vedetta',
-          product: p?.mode || 'vedetta',
+          mode: targetMode,
+          product: targetMode,
           opened: Boolean(m.opened),
           replied: Boolean(m.replied)
         });
