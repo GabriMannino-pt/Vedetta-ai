@@ -209,37 +209,29 @@ app.get('/api/portfolio', (req, res) => {
 app.get('/api/deals', async (req, res) => {
   try {
     const { getPendingOutreachList, getSentOutreachList } = require('./storage/cloudStore');
-    const { createDealFromProspect } = require('./crm/dealEngine');
     const sent = await getSentOutreachList();
-    const pending = await getPendingOutreachList();
 
-    // Genera deal solo dai prospect reali inviati o qualificati in attesa
-    const deals: any[] = [];
-
-    sent.forEach((s: any, idx: number) => {
-      deals.push({
-        id: s.id || 100 + idx,
-        company_name: s.company_name || s.company,
-        company: s.company_name || s.company,
-        project_name: (s.mode || 'vedetta').toUpperCase(),
-        product: s.mode || 'vedetta',
-        stage: 'CONTACTED',
-        deal_value: s.mode === 'danceflow' ? 1068 : 3980,
-        potential_mrr: s.mode === 'danceflow' ? 89 : 290,
-        potential_arr: s.mode === 'danceflow' ? 1068 : 3980,
-        probability_percent: 25,
-        weighted_value: s.mode === 'danceflow' ? 267 : 995,
-        cash_collected: 0,
-        last_interaction: s.sent_at,
-        next_action: 'In attesa di risposta / follow-up programmato'
-      });
-    });
+    // Genera deal ESCLUSIVAMENTE dai prospect reali inviati da Gmail
+    const deals: any[] = sent.map((s: any, idx: number) => ({
+      id: String(s.id || 100 + idx),
+      company: s.company || s.company_name || 'Azienda',
+      company_name: s.company || s.company_name || 'Azienda',
+      product: s.mode || s.product || 'danceflow',
+      mode: s.mode || s.product || 'danceflow',
+      stage: 'outreach',
+      value: s.mode === 'danceflow' ? 1068 : 3980,
+      deal_value: s.mode === 'danceflow' ? 1068 : 3980,
+      updatedAt: s.sent_at ? s.sent_at.slice(0, 10) : '2026-08-28',
+      updated_at: s.sent_at ? s.sent_at.slice(0, 10) : '2026-08-28',
+      owner: 'Gabriele'
+    }));
 
     res.json({
       success: true,
       data: deals,
       deals,
       items: deals,
+      prospects: deals,
       count: deals.length
     });
   } catch (err: any) {
