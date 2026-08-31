@@ -69,10 +69,15 @@ export async function getPendingOutreachList(): Promise<any[]> {
       const messagesSnap = await db.collection('outreach_messages').where('status', '==', 'READY_FOR_APPROVAL').get();
       const prospectsSnap = await db.collection('prospects').get();
 
-      const pMap = new Map<number, any>();
+      const pMap = new Map<string | number, any>();
       prospectsSnap.docs.forEach((doc: any) => {
         const data = doc.data();
-        pMap.set(data.id, data);
+        if (data.id !== undefined) {
+          pMap.set(data.id, data);
+          pMap.set(String(data.id), data);
+          pMap.set(Number(data.id), data);
+        }
+        pMap.set(doc.id, data);
       });
 
       const seen = new Set();
@@ -80,11 +85,12 @@ export async function getPendingOutreachList(): Promise<any[]> {
 
       messagesSnap.docs.forEach((doc: any) => {
         const m = doc.data();
-        if (!seen.has(m.prospect_id)) {
-          seen.add(m.prospect_id);
-          const p = pMap.get(m.prospect_id);
+        const msgId = String(m.id || doc.id);
+        if (!seen.has(msgId)) {
+          seen.add(msgId);
+          const p = pMap.get(m.prospect_id) || pMap.get(String(m.prospect_id)) || pMap.get(Number(m.prospect_id));
           if (p) {
-            let fallbackEmail = p.email || p.contact_email || m.recipient || m.email;
+            let fallbackEmail = m.recipient || m.email || p.email || p.contact_email;
             if (!fallbackEmail && p.website) {
               try {
                 const u = new URL(p.website.startsWith('http') ? p.website : 'https://' + p.website);
@@ -98,17 +104,18 @@ export async function getPendingOutreachList(): Promise<any[]> {
             pendingList.push({
               id: m.id || doc.id,
               prospect_id: p.id,
-              mode: p.mode,
-              company_name: p.name,
-              city: p.city,
-              website: p.website,
-              email: fallbackEmail,
-              recipient: fallbackEmail,
-              phone: p.phone,
-              channel: m.channel,
-              subject: m.subject,
-              content: m.content,
-              quality_score: m.quality_score,
+              mode: p.mode || m.mode || m.product || 'danceflow',
+              stage: m.stage || 'FIRST_TOUCH',
+              company_name: (p.name || 'Azienda') + (m.stage === 'FOLLOW_UP_1' ? ' 🔄 (Follow-up 1)' : ''),
+              city: p.city || 'Italia',
+              website: p.website || '',
+              email: fallbackEmail || '',
+              recipient: fallbackEmail || '',
+              phone: p.phone || '',
+              channel: m.channel || 'email',
+              subject: m.subject || '',
+              content: m.content || m.body || '',
+              quality_score: m.quality_score || 95,
               status: m.status,
               facts_used: m.quality_details?.facts_used || [],
               evidences: p.evidences || [],
