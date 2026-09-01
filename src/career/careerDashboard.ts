@@ -103,6 +103,10 @@ export interface CareerDashboardSummary {
   strongMatchesCount: number;
   applicationsCount: number;
   readyApplicationsCount: number;
+  pendingActionsCount: number;
+  pendingApprovalsCount: number;
+  nextActions: any[];
+  executionMetrics: any;
   funnel: CareerFunnelReport;
   metrics: any;
   alerts: CareerAlert[];
@@ -119,9 +123,23 @@ export function getCareerDashboard(): CareerDashboardSummary {
   const applicationsCount = Number((db.prepare('SELECT COUNT(*) as c FROM career_applications').get() as any)?.c || 0);
   const readyApplicationsCount = Number((db.prepare("SELECT COUNT(*) as c FROM career_applications WHERE status = 'READY'").get() as any)?.c || 0);
 
+  const pendingActionsCount = Number((db.prepare("SELECT COUNT(*) as c FROM career_actions WHERE status IN ('SUGGESTED', 'PENDING_APPROVAL')").get() as any)?.c || 0);
+  const pendingApprovalsCount = Number((db.prepare("SELECT COUNT(*) as c FROM career_actions WHERE status = 'PENDING_APPROVAL'").get() as any)?.c || 0);
+
   const funnel = calculateCareerFunnel();
   const metrics = calculateHistoricalMetrics();
   const alerts = generateCareerAlerts();
+
+  let nextActions: any[] = [];
+  let executionMetrics: any = null;
+  try {
+    const { getNextActions } = require('./nextActionEngine');
+    const { calculateExecutionMetrics } = require('./careerExecutionMetrics');
+    nextActions = getNextActions().slice(0, 10);
+    executionMetrics = calculateExecutionMetrics();
+  } catch (e: any) {
+    // Graceful fallback
+  }
 
   return {
     profile,
@@ -131,6 +149,10 @@ export function getCareerDashboard(): CareerDashboardSummary {
     strongMatchesCount,
     applicationsCount,
     readyApplicationsCount,
+    pendingActionsCount,
+    pendingApprovalsCount,
+    nextActions,
+    executionMetrics,
     funnel,
     metrics,
     alerts,

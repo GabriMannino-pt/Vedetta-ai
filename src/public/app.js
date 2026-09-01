@@ -530,7 +530,8 @@ async function loadCareerDashboard() {
     // Render Funnel
     renderCareerFunnel(data.funnel);
 
-    // Load Queue
+    // Load Actions & Queue
+    loadCareerActions();
     loadCareerQueue();
 
     if (window.lucide) lucide.createIcons();
@@ -733,4 +734,137 @@ function closeCareerSheet() {
   document.getElementById('career-sheet-overlay')?.classList.remove('active');
   document.getElementById('career-sheet')?.classList.remove('active');
 }
+
+// ─────────────────────────────────────────────────────────────
+// ⚡ CAREER ACTIONS & HUMAN APPROVAL HANDLERS
+// ─────────────────────────────────────────────────────────────
+
+async function loadCareerActions() {
+  try {
+    const res = await fetch('/api/career/actions');
+    const json = await res.json();
+    const container = document.getElementById('career-actions-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!json.success || !json.data || json.data.length === 0) {
+      container.innerHTML = '<div style="color: var(--db-gray-text); font-size: 13px; padding: 12px; text-align: center;">Nessuna azione operativa in attesa.</div>';
+      return;
+    }
+
+    const activeActions = json.data.filter(a => ['SUGGESTED', 'PENDING_APPROVAL', 'APPROVED'].includes(a.status));
+    if (activeActions.length === 0) {
+      container.innerHTML = '<div style="color: var(--db-gray-text); font-size: 13px; padding: 12px; text-align: center;">Tutte le azioni operative sono state completate o archiviate.</div>';
+      return;
+    }
+
+    activeActions.slice(0, 5).forEach(act => {
+      const isCritical = act.priority === 'CRITICAL';
+      const isPending = act.status === 'PENDING_APPROVAL';
+      const isApproved = act.status === 'APPROVED';
+
+      const card = document.createElement('div');
+      card.style = 'background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;';
+      
+      card.innerHTML = `
+        <div style="flex: 1; min-width: 250px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span style="font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${isCritical ? 'rgba(255,69,58,0.2)' : 'rgba(255,159,10,0.2)'}; color: ${isCritical ? '#ff453a' : '#ff9f0a'};">${act.priority}</span>
+            <span style="font-weight: 600; font-size: 13px; color: #fff;">${escapeHtml(act.actionType)}</span>
+            <span style="font-size: 11px; color: var(--db-gray-text);">[${escapeHtml(act.status)}]</span>
+          </div>
+          <div style="font-size: 12px; color: var(--db-gray-text); margin-bottom: 4px;">${escapeHtml(act.reason)}</div>
+          ${act.scheduledFor ? `<div style="font-size: 11px; color: var(--db-accent-green);"><i data-lucide="clock" style="width: 12px; height: 12px; display: inline;"></i> Schedulato per: ${new Date(act.scheduledFor).toLocaleDateString()}</div>` : ''}
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          ${isPending ? `
+            <button class="btn-primary" style="padding: 6px 12px; font-size: 12px; background: #10b981;" onclick="handleApproveAction(${act.id})">
+              Approva
+            </button>
+            <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px; color: #ff453a;" onclick="handleRejectAction(${act.id})">
+              Rifiuta
+            </button>
+          ` : ''}
+          ${isApproved ? `
+            <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="handleExecuteAction(${act.id})">
+              Esegui (Handoff)
+            </button>
+          ` : ''}
+          ${act.opportunityId ? `
+            <button class="btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="openCareerOpportunityDetail(${act.opportunityId})">
+              Dettaglio
+            </button>
+          ` : ''}
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('Error loading career actions:', err);
+  }
+}
+
+async function handleApproveAction(actionId) {
+  try {
+    const res = await fetch(\`/api/career/actions/\${actionId}/approve\`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actor: 'USER', notes: 'Approvato manualmente dalla dashboard' })
+    });
+    const json = await res.json();
+    if (json.success) {
+      loadCareerActions();
+      loadCareerDashboard();
+    }
+  } catch (err) {
+    alert('Errore durante l\\'approvazione dell\\'azione: ' + err.message);
+  }
+}
+
+async function handleRejectAction(actionId) {
+  const reason = prompt('Motivo del rifiuto:');
+  if (reason === null) return;
+
+  try {
+    const res = await fetch(\`/api/career/actions/\${actionId}/reject\`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actor: 'USER', reason: reason || 'Rifiutato dall\\'utente' })
+    });
+    const json = await res.json();
+    if (json.success) {
+      loadCareerActions();
+      loadCareerDashboard();
+    }
+  } catch (err) {
+    alert('Errore durante il rifiuto dell\\'azione: ' + err.message);
+  }
+}
+
+async function handleExecuteAction(actionId) {
+  try {
+    const res = await fetch(\`/api/career/actions/\${actionId}/execute\`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actor: 'USER' })
+    });
+    const json = await res.json();
+    if (json.success) {
+      if (json.mode === 'HUMAN_HANDOFF') {
+        alert('✅ Pacchetto preparato per l\\'invio manuale:\\n\\n' + (json.payload?.instructions || json.message));
+      } else {
+        alert('✅ Azione eseguita con successo!');
+      }
+      loadCareerActions();
+      loadCareerDashboard();
+    } else {
+      alert('❌ Errore esecuzione: ' + json.error);
+    }
+  } catch (err) {
+    alert('Errore esecuzione: ' + err.message);
+  }
+}
+
 

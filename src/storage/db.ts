@@ -202,6 +202,14 @@ export function initDb(): void {
     console.warn('[DB] Migrazioni 1.7 warning:', e.message);
   }
 
+  // Migrazioni Vedetta 1.8 (Career Execution Engine & Audit)
+  try {
+    const { runMigrations1_8 } = require('./migrations_1_8');
+    runMigrations1_8(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.8 warning:', e.message);
+  }
+
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
 

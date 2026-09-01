@@ -901,6 +901,146 @@ app.get('/api/career/alerts', (req, res) => {
   }
 });
 
+// 29. GET /api/career/actions
+app.get('/api/career/actions', (req, res) => {
+  try {
+    const { listActions } = require('./career/careerActions');
+    const filters: any = {};
+    if (req.query.status) filters.status = req.query.status as string;
+    if (req.query.priority) filters.priority = req.query.priority as string;
+    if (req.query.actionType) filters.actionType = req.query.actionType as string;
+    if (req.query.opportunityId) filters.opportunityId = parseInt(req.query.opportunityId as string, 10);
+    if (req.query.applicationId) filters.applicationId = parseInt(req.query.applicationId as string, 10);
+
+    const actions = listActions(filters);
+    res.json({ success: true, count: actions.length, data: actions });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 30. GET /api/career/actions/:id
+app.get('/api/career/actions/:id', (req, res) => {
+  try {
+    const { getAction } = require('./career/careerActions');
+    const id = parseInt(req.params.id, 10);
+    const action = getAction(id);
+    if (!action) return res.status(404).json({ error: 'Action not found' });
+    res.json({ success: true, data: action });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 31. POST /api/career/actions/:id/approve
+app.post('/api/career/actions/:id/approve', (req, res) => {
+  try {
+    const { approveAction } = require('./career/humanApproval');
+    const id = parseInt(req.params.id, 10);
+    const { actor, notes } = req.body;
+    approveAction(id, actor || 'USER', notes);
+    res.json({ success: true, message: 'Action approved successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 32. POST /api/career/actions/:id/reject
+app.post('/api/career/actions/:id/reject', (req, res) => {
+  try {
+    const { rejectAction } = require('./career/humanApproval');
+    const id = parseInt(req.params.id, 10);
+    const { actor, reason } = req.body;
+    rejectAction(id, actor || 'USER', reason);
+    res.json({ success: true, message: 'Action rejected successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 33. POST /api/career/actions/:id/cancel
+app.post('/api/career/actions/:id/cancel', (req, res) => {
+  try {
+    const { cancelAction } = require('./career/humanApproval');
+    const id = parseInt(req.params.id, 10);
+    const { actor, reason } = req.body;
+    cancelAction(id, actor || 'USER', reason);
+    res.json({ success: true, message: 'Action cancelled successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 34. POST /api/career/actions/:id/execute
+app.post('/api/career/actions/:id/execute', async (req, res) => {
+  try {
+    const { executeApplicationAction } = require('./career/applicationExecutionAdapter');
+    const id = parseInt(req.params.id, 10);
+    const { actor } = req.body;
+    const result = await executeApplicationAction(id, actor || 'USER');
+    res.json({ success: true, ...result });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 35. GET /api/career/actions/:id/audit
+app.get('/api/career/actions/:id/audit', (req, res) => {
+  try {
+    const { getActionAudit } = require('./career/careerActions');
+    const id = parseInt(req.params.id, 10);
+    const audit = getActionAudit(id);
+    res.json({ success: true, count: audit.length, data: audit });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 36. GET /api/career/next-actions
+app.get('/api/career/next-actions', (req, res) => {
+  try {
+    const { getNextActions } = require('./career/nextActionEngine');
+    const actions = getNextActions();
+    res.json({ success: true, count: actions.length, data: actions });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 37. GET /api/career/opportunities/:id/next-action
+app.get('/api/career/opportunities/:id/next-action', (req, res) => {
+  try {
+    const { getNextAction } = require('./career/nextActionEngine');
+    const id = parseInt(req.params.id, 10);
+    const nextAction = getNextAction(id);
+    res.json({ success: true, data: nextAction });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 38. GET /api/career/execution/metrics
+app.get('/api/career/execution/metrics', (req, res) => {
+  try {
+    const { calculateExecutionMetrics } = require('./career/careerExecutionMetrics');
+    const metrics = calculateExecutionMetrics();
+    res.json({ success: true, data: metrics });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 39. POST /api/career/execution/refresh
+app.post('/api/career/execution/refresh', (req, res) => {
+  try {
+    const { refreshCareerQueue } = require('./career/careerScheduler');
+    const result = refreshCareerQueue();
+    res.json({ success: true, ...result });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. File Statici: Serviamo la Dashboard Web (HTML/JS)
 app.use(express.static(path.join(__dirname, '..', 'src', 'public')));
 

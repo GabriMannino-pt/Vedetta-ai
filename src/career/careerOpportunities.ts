@@ -132,9 +132,11 @@ export function getOpportunity(id: number): CareerOpportunity | null {
   return mapRowToOpportunity(row);
 }
 
-export function listOpportunities(profileId: number): CareerOpportunity[] {
+export function listOpportunities(profileId?: number): CareerOpportunity[] {
   const db = getDb();
-  const rows = db.prepare('SELECT * FROM career_opportunities WHERE profile_id = ? ORDER BY first_seen_at DESC').all(profileId) as any[];
+  const rows = profileId
+    ? db.prepare('SELECT * FROM career_opportunities WHERE profile_id = ? ORDER BY first_seen_at DESC').all(profileId) as any[]
+    : db.prepare('SELECT * FROM career_opportunities ORDER BY first_seen_at DESC').all() as any[];
   return rows.map(mapRowToOpportunity);
 }
 

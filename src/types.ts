@@ -578,7 +578,8 @@ export type OpportunityStatus =
   | 'INTERVIEW' 
   | 'OFFER' 
   | 'ACCEPTED' 
-  | 'CLOSED';
+  | 'CLOSED'
+  | 'ARCHIVED';
 
 export interface CareerOpportunity {
   id?: number;
@@ -982,6 +983,116 @@ export interface FitCalibrationBucket {
   winRate: number;
   avgRevenue: number;
 }
+
+// ─────────────────────────────────────────────────────────────
+// ⚡ CAREER-001.8 — CAREER EXECUTION ENGINE & ACTION AUDIT TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type CareerActionType =
+  | 'REVIEW_OPPORTUNITY'
+  | 'CREATE_APPLICATION'
+  | 'REVIEW_PROPOSAL'
+  | 'APPROVE_PROPOSAL'
+  | 'SUBMIT_APPLICATION'
+  | 'FOLLOW_UP'
+  | 'REVIEW_OUTCOME'
+  | 'UPDATE_APPLICATION'
+  | 'ARCHIVE_OPPORTUNITY'
+  | 'SCHEDULE_REVIEW';
+
+export type CareerActionStatus =
+  | 'SUGGESTED'
+  | 'PENDING_APPROVAL'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'EXECUTING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'EXPIRED';
+
+export type CareerActionPriority =
+  | 'CRITICAL'
+  | 'HIGH'
+  | 'MEDIUM'
+  | 'LOW';
+
+export type CareerActionSource =
+  | 'SYSTEM'
+  | 'USER'
+  | 'OUTCOME_EVENT'
+  | 'DEADLINE_RULE'
+  | 'LEARNING_ENGINE'
+  | 'FIT_ENGINE';
+
+export interface CareerAction {
+  id?: number;
+  profileId: number;
+  opportunityId?: number | null;
+  applicationId?: number | null;
+  actionType: CareerActionType;
+  status: CareerActionStatus;
+  priority: CareerActionPriority;
+  reason: string;
+  payloadJson?: string | null;
+  source: CareerActionSource;
+  algorithmVersion: number;
+  scheduledFor?: string | null;
+  approvedAt?: string | null;
+  completedAt?: string | null;
+  failedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CareerActionAudit {
+  id?: number;
+  actionId: number;
+  previousStatus?: CareerActionStatus | null;
+  newStatus: CareerActionStatus;
+  actor: string;
+  reason?: string | null;
+  metadataJson?: string | null;
+  createdAt?: string;
+}
+
+export interface CareerExecutionPolicy {
+  minFitScoreForApplication: number;
+  imminentDeadlineHours: number;
+  followUpDaysInterval: number;
+  blockOnCriticalGap: boolean;
+  requireApprovalForSubmit: boolean;
+  requireApprovalForFollowUp: boolean;
+}
+
+export interface CareerNextAction {
+  actionType: CareerActionType;
+  priority: CareerActionPriority;
+  reason: string;
+  opportunityId?: number | null;
+  applicationId?: number | null;
+  blockingFactors: string[];
+  recommendedAt: string;
+  requiresApproval: boolean;
+  actionId?: number | null;
+}
+
+export interface CareerExecutionMetrics {
+  actionsSuggested: number;
+  actionsApproved: number;
+  actionsRejected: number;
+  actionsCompleted: number;
+  actionsFailed: number;
+  actionsExpired: number;
+  approvalRate: number;            // approved / (approved + rejected)
+  executionSuccessRate: number;    // completed / (completed + failed)
+  executionEfficiency: number;     // approved / suggested
+  averageApprovalDelayHours: number | null;
+  overdueActionsCount: number;
+  pendingApprovalsCount: number;
+  opportunityLeakageCount: number; // fit >= 80, no app, active deadline
+}
+
 
 
 

@@ -334,6 +334,24 @@
         <div id="career-funnel-stages" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); gap: 8px;"></div>
       </div>
 
+      <!-- Human Approval & Execution Queue -->
+      <div class="card-section" style="margin-bottom: 24px; background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="shield-check"></i> Human-in-the-Loop Action Queue
+            </h3>
+            <span style="font-size: 12px; color: var(--db-gray-text);">Azioni operative pianificate che richiedono supervisione o handoff umano</span>
+          </div>
+          <button class="btn-secondary" onclick="loadCareerActions()" style="padding: 6px 12px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="refresh-cw"></i> Sincronizza Azioni
+          </button>
+        </div>
+        <div id="career-actions-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
       <!-- Opportunity Queue Table & Controls -->
       <div class="table-card" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
