@@ -705,6 +705,107 @@ app.get('/api/career/applications/:id/proposal', (req, res) => {
   }
 });
 
+// 16. POST /api/career/applications/:id/outcomes
+app.post('/api/career/applications/:id/outcomes', (req, res) => {
+  try {
+    const { recordOutcomeEvent } = require('./career/careerOutcomes');
+    const { getApplication } = require('./career/careerApplications');
+    const appId = parseInt(req.params.id, 10);
+    const app = getApplication(appId);
+    if (!app) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const { eventType, eventAt, source, notes, metadata } = req.body;
+    if (!eventType) {
+      return res.status(400).json({ error: 'eventType is required' });
+    }
+
+    const eventId = recordOutcomeEvent({
+      applicationId: appId,
+      opportunityId: app.opportunity_id,
+      profileId: app.profile_id,
+      eventType,
+      eventAt: eventAt || new Date().toISOString(),
+      source: source || 'MANUAL',
+      notes,
+      metadataJson: metadata ? JSON.stringify(metadata) : undefined
+    });
+
+    res.json({ success: true, eventId });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 17. GET /api/career/applications/:id/outcomes
+app.get('/api/career/applications/:id/outcomes', (req, res) => {
+  try {
+    const { listOutcomeEvents } = require('./career/careerOutcomes');
+    const appId = parseInt(req.params.id, 10);
+    const events = listOutcomeEvents(appId);
+    res.json({ success: true, count: events.length, data: events });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 18. GET /api/career/applications/:id/outcome-summary
+app.get('/api/career/applications/:id/outcome-summary', (req, res) => {
+  try {
+    const { calculateOutcomeSummary } = require('./career/careerOutcomes');
+    const appId = parseInt(req.params.id, 10);
+    const summary = calculateOutcomeSummary(appId);
+    res.json({ success: true, data: summary });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 19. GET /api/career/learning/metrics
+app.get('/api/career/learning/metrics', (req, res) => {
+  try {
+    const { calculateHistoricalMetrics } = require('./career/learningEngine');
+    const metrics = calculateHistoricalMetrics();
+    res.json({ success: true, data: metrics });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 20. GET /api/career/learning/calibration
+app.get('/api/career/learning/calibration', (req, res) => {
+  try {
+    const { calculateCalibration } = require('./career/learningEngine');
+    const calibration = calculateCalibration();
+    res.json({ success: true, data: calibration });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 21. GET /api/career/learning/insights
+app.get('/api/career/learning/insights', (req, res) => {
+  try {
+    const { generateLearningInsights } = require('./career/learningEngine');
+    const insights = generateLearningInsights();
+    res.json({ success: true, count: insights.length, data: insights });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 22. POST /api/career/learning/rebuild
+app.post('/api/career/learning/rebuild', (req, res) => {
+  try {
+    const { rebuildAllLearningObservations } = require('./career/learningEngine');
+    const count = rebuildAllLearningObservations();
+    res.json({ success: true, observationsRebuilt: count });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. File Statici: Serviamo la Dashboard Web (HTML/JS)
 app.use(express.static(path.join(__dirname, '..', 'src', 'public')));
 

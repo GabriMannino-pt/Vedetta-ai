@@ -53,6 +53,6 @@
 - [x] **CAREER-001.3** Opportunity Intelligence & Semantic Requirement Extraction (Gemini + Evidence Guard)
 - [x] **CAREER-001.4** Deterministic Fit Scoring Engine & Profile Matcher
 - [x] **CAREER-001.5** Evidence Matcher & Verification Engine
-- [ ] **CAREER-001.6** Priority & Expected Value Scorer
+- [x] **CAREER-001.6** Priority & Expected Value Scorer (Outcome Tracking, Learning & Feedback Loop)
 - [ ] **CAREER-001.7** LinkedIn Integration Layer
 - [ ] **CAREER-001.8** Upwork Integration Layer

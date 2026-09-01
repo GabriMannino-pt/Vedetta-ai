@@ -836,6 +836,154 @@ export interface ProposalValidationResult {
   claims: ProposalClaim[];
 }
 
+// ─────────────────────────────────────────────────────────────
+// 📈 CAREER-001.6 — OUTCOME TRACKING & LEARNING ENGINE TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type CareerOutcomeEventType = 
+  | 'SUBMITTED'
+  | 'VIEWED'
+  | 'RESPONSE_RECEIVED'
+  | 'NO_RESPONSE'
+  | 'REJECTED'
+  | 'INTERVIEW_INVITED'
+  | 'INTERVIEW_COMPLETED'
+  | 'OFFER_RECEIVED'
+  | 'WON'
+  | 'LOST'
+  | 'WITHDRAWN';
+
+export type CareerOutcomeSource = 
+  | 'MANUAL'
+  | 'UPWORK'
+  | 'LINKEDIN'
+  | 'DIRECT'
+  | 'REFERRAL'
+  | 'SYSTEM';
+
+export interface CareerOutcomeEvent {
+  id?: number;
+  applicationId: number;
+  opportunityId: number;
+  profileId: number;
+  eventType: CareerOutcomeEventType;
+  eventAt: string;
+  source: CareerOutcomeSource;
+  notes?: string | null;
+  metadataJson?: string | null;
+  createdAt?: string;
+}
+
+export interface CareerOutcomeSummary {
+  applicationId: number;
+  submitted: boolean;
+  responseReceived: boolean;
+  interviewInvited: boolean;
+  interviewCompleted: boolean;
+  offerReceived: boolean;
+  won: boolean;
+  lost: boolean;
+  finalOutcome: CareerOutcomeEventType;
+  daysToResponse?: number | null;
+  daysToInterview?: number | null;
+  daysToOffer?: number | null;
+  daysToClose?: number | null;
+  revenue?: number | null;
+  currency?: string | null;
+  calculatedAt?: string;
+  algorithmVersion?: number;
+}
+
+export interface CareerLearningObservation {
+  id?: number;
+  applicationId: number;
+  opportunityId: number;
+  fitScore: number;
+  applicationPriority: number;
+  technicalMatch: number;
+  experienceMatch: number;
+  seniorityMatch: number;
+  domainMatch: number;
+  evidenceScore: number;
+  mustHaveCoverage: number;
+  niceToHaveCoverage: number;
+  remoteMatch: number;
+  languageMatch: number;
+  criticalGap: boolean;
+  recommendation: ApplicationRecommendation;
+  channel: ApplicationChannel;
+  source: string;
+  outcome: CareerOutcomeEventType;
+  revenue: number;
+  fitAlgorithmVersion: number;
+  learningAlgorithmVersion: number;
+  observedAt: string;
+}
+
+export type CareerLearningInsightType =
+  | 'FIT_CALIBRATION'
+  | 'CHANNEL_PERFORMANCE'
+  | 'DOMAIN_PERFORMANCE'
+  | 'SENIORITY_PERFORMANCE'
+  | 'EVIDENCE_PERFORMANCE'
+  | 'PROPOSAL_PERFORMANCE'
+  | 'PRIORITY_PERFORMANCE'
+  | 'REVENUE_PERFORMANCE';
+
+export interface CareerLearningInsight {
+  id?: string;
+  insightType: CareerLearningInsightType;
+  title: string;
+  description: string;
+  dimension: string;
+  dimensionValue: string;
+  sampleSize: number;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH' | 'INSUFFICIENT_DATA';
+  observedMetric: number;
+  baselineMetric: number;
+  delta: number;
+  recommendedAction: string;
+  learningAlgorithmVersion: number;
+  generatedAt: string;
+}
+
+export interface CareerLearningMetrics {
+  totalApplications: number;
+  submittedApplications: number;
+  responsesReceived: number;
+  interviewsInvited: number;
+  interviewsCompleted: number;
+  offersReceived: number;
+  wonDeals: number;
+  lostDeals: number;
+  totalRevenue: number;
+  responseRate: number;            // responses / submitted
+  interviewRate: number;           // interviews / submitted
+  interviewConversionRate: number; // interviews / responses
+  offerRate: number;               // offers / interviews
+  winRate: number;                 // won / submitted
+  revenuePerApplication: number;   // total revenue / submitted
+  revenuePerInterview: number;     // total revenue / interviews
+  avgDaysToResponse: number | null;
+  avgDaysToInterview: number | null;
+  avgDaysToOffer: number | null;
+  avgDaysToClose: number | null;
+}
+
+export interface FitCalibrationBucket {
+  bucketLabel: string;
+  minScore: number;
+  maxScore: number;
+  totalApplications: number;
+  interviews: number;
+  offers: number;
+  wins: number;
+  interviewRate: number;
+  winRate: number;
+  avgRevenue: number;
+}
+
+
 
 
 

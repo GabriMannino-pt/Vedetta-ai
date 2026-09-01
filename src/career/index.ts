@@ -16,3 +16,6 @@ export * from './proposalGuard';
 export * from './careerApplications';
 export * from './careerProposals';
 export * from './applicationIntelligence';
+export * from './careerOutcomes';
+export * from './revenueOutcomeAdapter';
+export * from './learningEngine';

@@ -194,6 +194,14 @@ export function initDb(): void {
     console.warn('[DB] Migrazioni 1.6 warning:', e.message);
   }
 
+  // Migrazioni Vedetta 1.7 (Career Outcome Tracking & Learning)
+  try {
+    const { runMigrations1_7 } = require('./migrations_1_7');
+    runMigrations1_7(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.7 warning:', e.message);
+  }
+
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
 
