@@ -12,6 +12,14 @@ function runTests() {
   // Initialize DB in memory/test mode
   initDb();
   const db = getDb();
+  db.prepare('DELETE FROM career_proposal_claims').run();
+  db.prepare('DELETE FROM career_proposals').run();
+  db.prepare('DELETE FROM career_applications').run();
+  db.prepare('DELETE FROM career_opportunity_requirements').run();
+  db.prepare('DELETE FROM career_opportunities').run();
+  db.prepare('DELETE FROM career_evidence').run();
+  db.prepare('DELETE FROM career_skills').run();
+  db.prepare('DELETE FROM career_profile').run();
 
   // Test 1: Profile CRUD & Validations
   console.log('Test 1: Career Profile CRUD & Validations...');

@@ -647,6 +647,64 @@ app.post('/api/sales/reply-classify', (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// 🦅 VEDETTA CAREER INTELLIGENCE REST API (CAREER-001.5)
+// ─────────────────────────────────────────────────────────────
+
+// 12. POST /api/career/applications/:opportunityId/prepare
+app.post('/api/career/applications/:opportunityId/prepare', async (req, res) => {
+  try {
+    const { prepareApplication } = require('./career/applicationIntelligence');
+    const oppId = parseInt(req.params.opportunityId, 10);
+    const result = await prepareApplication(oppId, req.body || {});
+    res.json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 13. GET /api/career/applications
+app.get('/api/career/applications', (req, res) => {
+  try {
+    const { listApplications } = require('./career/careerApplications');
+    const profileId = req.query.profileId ? parseInt(req.query.profileId as string, 10) : undefined;
+    const applications = listApplications(profileId);
+    res.json({ success: true, count: applications.length, data: applications });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 14. GET /api/career/applications/:id
+app.get('/api/career/applications/:id', (req, res) => {
+  try {
+    const { getApplication } = require('./career/careerApplications');
+    const id = parseInt(req.params.id, 10);
+    const application = getApplication(id);
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+    res.json({ success: true, data: application });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 15. GET /api/career/applications/:id/proposal
+app.get('/api/career/applications/:id/proposal', (req, res) => {
+  try {
+    const { getProposalForApplication } = require('./career/careerProposals');
+    const appId = parseInt(req.params.id, 10);
+    const proposal = getProposalForApplication(appId);
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found for application' });
+    }
+    res.json({ success: true, data: proposal });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. File Statici: Serviamo la Dashboard Web (HTML/JS)
 app.use(express.static(path.join(__dirname, '..', 'src', 'public')));
 

@@ -186,6 +186,14 @@ export function initDb(): void {
     console.warn('[DB] Migrazioni 1.5 warning:', e.message);
   }
 
+  // Migrazioni Vedetta 1.6 (Application Intelligence & Proposals)
+  try {
+    const { runMigrations1_6 } = require('./migrations_1_6');
+    runMigrations1_6(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.6 warning:', e.message);
+  }
+
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
 

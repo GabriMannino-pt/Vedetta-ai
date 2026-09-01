@@ -52,7 +52,7 @@
 - [x] **CAREER-001.2** Universal Opportunity Core & Persistence Foundation (Deduplication + Normalizer)
 - [x] **CAREER-001.3** Opportunity Intelligence & Semantic Requirement Extraction (Gemini + Evidence Guard)
 - [x] **CAREER-001.4** Deterministic Fit Scoring Engine & Profile Matcher
-- [ ] **CAREER-001.5** Evidence Matcher & Verification Engine
+- [x] **CAREER-001.5** Evidence Matcher & Verification Engine
 - [ ] **CAREER-001.6** Priority & Expected Value Scorer
 - [ ] **CAREER-001.7** LinkedIn Integration Layer
 - [ ] **CAREER-001.8** Upwork Integration Layer

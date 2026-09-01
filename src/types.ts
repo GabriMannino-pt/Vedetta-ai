@@ -745,6 +745,98 @@ export interface FitEvaluationResult {
   algorithmVersion: number;
 }
 
+// ─────────────────────────────────────────────────────────────
+// 🚀 CAREER-001.5 — APPLICATION INTELLIGENCE & PROPOSAL TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type ApplicationStatus = 'DRAFT' | 'VALIDATED' | 'READY' | 'BLOCKED' | 'SUBMITTED' | 'WITHDRAWN';
+export type ProposalStatus = 'DRAFT' | 'VALIDATED' | 'BLOCKED' | 'READY';
+export type ClaimSupportLevel = 'VERIFIED' | 'STRONG' | 'PARTIAL' | 'UNSUPPORTED';
+export type ApplicationChannel = 'UPWORK' | 'LINKEDIN' | 'DIRECT' | 'REFERRAL' | 'OTHER';
+
+export interface MatchedRequirementEvidence {
+  requirement_name: string;
+  normalized_name: string;
+  category: string;
+  priority: string;
+  skill_id?: number;
+  skill_name?: string;
+  skill_level?: string;
+  evidence_id?: number;
+  evidence_title?: string;
+  evidence_type?: string;
+  source_type?: string;
+  source_url?: string;
+  verified: boolean;
+  support_level: ClaimSupportLevel;
+  match_reason: string;
+}
+
+export interface ApplicationStrategy {
+  why_fit: string;
+  top_strengths: string[];
+  top_evidence: MatchedRequirementEvidence[];
+  critical_gaps: string[];
+  positioning_angle: string;
+  recommended_rate?: number | null;
+  recommended_tone: 'TECHNICAL' | 'CONSULTING' | 'AUTOMATION' | 'AI' | 'FULL_STACK' | 'FREELANCE' | 'OTHER';
+  recommended_structure: string[];
+}
+
+export interface ProposalClaim {
+  id?: number;
+  proposal_id: number;
+  claim_text: string;
+  claim_type: 'TECHNICAL_SKILL' | 'EXPERIENCE_YEARS' | 'METRIC_RESULT' | 'PRODUCTION_SYSTEM' | 'PROJECT_REFERENCE' | 'GENERAL';
+  support_level: ClaimSupportLevel;
+  evidence_id?: number | null;
+  source_reference?: string | null;
+  validation_status: 'SUPPORTED' | 'UNSUPPORTED' | 'FLAGGED';
+  created_at?: string;
+}
+
+export interface CareerProposal {
+  id?: number;
+  application_id: number;
+  content: string;
+  proposal_status: ProposalStatus;
+  proposal_version: number;
+  proposal_algorithm_version: number;
+  claims?: ProposalClaim[];
+  created_at?: string;
+  validated_at?: string | null;
+}
+
+export interface CareerApplication {
+  id?: number;
+  profile_id: number;
+  opportunity_id: number;
+  status: ApplicationStatus;
+  channel: ApplicationChannel;
+  fit_score_snapshot: number;
+  priority_snapshot: number;
+  recommendation_snapshot: ApplicationRecommendation;
+  fit_algorithm_version: number;
+  strategy_json: string;
+  evidence_ids_json: string; // Snapshot of evidence IDs utilized
+  proposal_id?: number | null;
+  created_at?: string;
+  updated_at?: string;
+  submitted_at?: string | null;
+}
+
+export interface ProposalValidationResult {
+  valid: boolean;
+  proposal_status: ProposalStatus;
+  claims_checked: number;
+  supported_claims: number;
+  unsupported_claims: number;
+  warnings: string[];
+  blocking_reasons: string[];
+  claims: ProposalClaim[];
+}
+
+
 
 
 
