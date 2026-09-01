@@ -154,6 +154,30 @@ export function initDb(): void {
     console.warn('[DB] Migrazioni 1.1 warning:', e.message);
   }
 
+  // Migrazioni Vedetta 1.2 (Career OS Foundation)
+  try {
+    const { runMigrations1_2 } = require('./migrations_1_2');
+    runMigrations1_2(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.2 warning:', e.message);
+  }
+
+  // Migrazioni Vedetta 1.3 (Career Opportunities Core)
+  try {
+    const { runMigrations1_3 } = require('./migrations_1_3');
+    runMigrations1_3(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.3 warning:', e.message);
+  }
+
+  // Migrazioni Vedetta 1.4 (Opportunity Requirements)
+  try {
+    const { runMigrations1_4 } = require('./migrations_1_4');
+    runMigrations1_4(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.4 warning:', e.message);
+  }
+
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
 

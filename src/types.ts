@@ -504,3 +504,183 @@ export interface ProductCommercialScores {
   data_tag: DataTag;
 }
 
+// ─────────────────────────────────────────────────────────────
+// 👤 CAREER-001 — CAREER INTELLIGENCE TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type CareerSkillLevel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+export type CareerSkillConfidence = 'LOW' | 'MEDIUM' | 'HIGH' | 'VERIFIED';
+export type CareerEvidenceType = 'GITHUB_PROJECT' | 'PRODUCTION_SYSTEM' | 'PORTFOLIO' | 'CV' | 'WORK_EXPERIENCE' | 'CASE_STUDY' | 'CERTIFICATION' | 'OTHER';
+
+export interface CareerProfile {
+  id?: number;
+  name: string;
+  headline: string;
+  summary: string;
+  years_experience: number;
+  seniority: string;
+  target_salary_min: number;
+  target_salary_max: number;
+  target_hourly_rate: number;
+  remote_preference: 'REMOTE' | 'HYBRID' | 'ONSITE' | 'ANY';
+  location: string;
+  career_goal: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CareerSkill {
+  id?: number;
+  profile_id: number;
+  skill: string;
+  category: 'PROGRAMMING' | 'AI' | 'LLM' | 'AUTOMATION' | 'DATABASE' | 'CLOUD' | 'DEVOPS' | 'FRONTEND' | 'BACKEND' | 'ARCHITECTURE' | 'OTHER';
+  level: CareerSkillLevel;
+  years_experience: number;
+  confidence: CareerSkillConfidence;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CareerEvidence {
+  id?: number;
+  profile_id: number;
+  project_id?: string; // Links to existing `projects` table (primary key is name: TEXT)
+  type: CareerEvidenceType;
+  title: string;
+  description: string;
+  source_type: 'GITHUB' | 'CV' | 'CERTIFICATION' | 'CLIENT_RESULT' | 'OTHER';
+  source_url?: string;
+  source_reference?: string; // File name, commit SHA, or class name
+  skill_id: number; // Links to `career_skills` table
+  verified: boolean;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 💼 CAREER-001.2 — CAREER OPPORTUNITY CORE TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type OpportunitySource = 'LINKEDIN' | 'UPWORK' | 'DIRECT' | 'RECRUITER' | 'REFERRAL' | 'OTHER';
+export type OpportunityType = 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'FREELANCE' | 'INTERNSHIP' | 'OTHER';
+export type Seniority = 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD' | 'STAFF' | 'PRINCIPAL' | 'MANAGER' | 'OTHER' | 'UNKNOWN';
+export type RemoteType = 'REMOTE' | 'HYBRID' | 'ONSITE' | 'UNKNOWN';
+export type SalaryPeriod = 'YEAR' | 'MONTH' | 'DAY' | 'HOUR' | 'PROJECT' | 'UNKNOWN';
+export type OpportunityStatus = 
+  | 'NEW' 
+  | 'REVIEW' 
+  | 'SHORTLISTED' 
+  | 'REJECTED' 
+  | 'DRAFT_READY' 
+  | 'READY_TO_APPLY' 
+  | 'APPLIED' 
+  | 'INTERVIEW' 
+  | 'OFFER' 
+  | 'ACCEPTED' 
+  | 'CLOSED';
+
+export interface CareerOpportunity {
+  id?: number;
+  profile_id: number;
+  external_id?: string | null;
+  fingerprint: string;
+  source: OpportunitySource;
+  source_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+
+  // Detail
+  title: string;
+  company_name: string;
+  description: string;
+  opportunity_type: OpportunityType;
+  seniority: Seniority;
+  location: string;
+  remote_type: RemoteType;
+
+  // Compensation (Strictly nullable, not 0)
+  currency?: string | null;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  salary_period?: SalaryPeriod | null;
+  hourly_rate_min?: number | null;
+  hourly_rate_max?: number | null;
+
+  // Lifecycle & Application
+  deadline?: string | null;
+  status: OpportunityStatus;
+  first_seen_at?: string;
+  last_seen_at?: string;
+  applied_at?: string | null;
+
+  // Analysis placeholders (Strictly nullable)
+  analysis_status?: 'NOT_ANALYZED' | 'ANALYZING' | 'ANALYZED' | 'FAILED';
+  analysis_summary?: string | null;
+  role_focus_json?: string | null;
+  responsibilities_json?: string | null;
+  technologies_json?: string | null;
+  languages_json?: string | null;
+  seniority_signals_json?: string | null;
+  remote_signals_json?: string | null;
+  risk_signals_json?: string | null;
+  extraction_confidence?: number | null;
+  analyzed_at?: string | null;
+  fit_score?: number | null;
+  evidence_score?: number | null;
+  priority_score?: number | null;
+}
+
+// ─────────────────────────────────────────────────────────────
+// 🧬 CAREER-001.3 — OPPORTUNITY INTELLIGENCE TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type RequirementPriority = 'MUST_HAVE' | 'SHOULD_HAVE' | 'NICE_TO_HAVE' | 'UNKNOWN';
+
+export type RequirementCategory = 
+  | 'TECHNICAL' 
+  | 'EXPERIENCE' 
+  | 'EDUCATION' 
+  | 'LANGUAGE' 
+  | 'LOCATION' 
+  | 'DOMAIN' 
+  | 'SOFT_SKILL' 
+  | 'RESPONSIBILITY' 
+  | 'OTHER';
+
+export interface RequirementEvidence {
+  sourceText: string;
+  sourceType: 'JOB_DESCRIPTION';
+  confidence: number;
+}
+
+export interface CareerRequirement {
+  id?: number;
+  opportunityId: number;
+  name: string;
+  normalizedName: string;
+  category: RequirementCategory;
+  priority: RequirementPriority;
+  yearsRequired?: number | null;
+  evidence: RequirementEvidence;
+  analysis_version?: number; // Forward-compatible analysis version
+}
+
+export interface OpportunityAnalysis {
+  opportunityId: number;
+  summary: string;
+  roleFocus: string[];
+  responsibilities: string[];
+  requirements: CareerRequirement[];
+  technologies: string[];
+  languages: string[];
+  senioritySignals: string[];
+  remoteSignals: string[];
+  riskSignals: string[];
+  extractionConfidence: number;
+  analyzedAt?: string;
+  analysis_version?: number;
+}
+
+
+

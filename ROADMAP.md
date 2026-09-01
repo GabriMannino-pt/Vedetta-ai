@@ -44,3 +44,15 @@
 - [ ] **VED-040** Registrazione primo incasso reale nel Cash Ledger
 - [ ] **VED-041** Attivazione direttiva automatica SCALE sul prodotto con migliore trazione
 - [ ] **VED-042** Deploy Variante B (Video Loom 60s / Prova Gratuita) per obiezioni
+
+---
+
+## 🦅 MILESTONE 6 — Career Intelligence OS (CAREER-001) (IN CORSO 🚀)
+- [x] **CAREER-001.1** Career Profile, Skills & Evidence Registry Foundation (SQLite + Validations)
+- [x] **CAREER-001.2** Universal Opportunity Core & Persistence Foundation (Deduplication + Normalizer)
+- [x] **CAREER-001.3** Opportunity Intelligence & Semantic Requirement Extraction (Gemini + Evidence Guard)
+- [ ] **CAREER-001.4** Deterministic Fit Scoring Engine & Profile Matcher
+- [ ] **CAREER-001.5** Evidence Matcher & Verification Engine
+- [ ] **CAREER-001.6** Priority & Expected Value Scorer
+- [ ] **CAREER-001.7** LinkedIn Integration Layer
+- [ ] **CAREER-001.8** Upwork Integration Layer
