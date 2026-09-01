@@ -849,6 +849,122 @@ app.get('/api/career/opportunities/queue', (req, res) => {
   }
 });
 
+// 24b. POST /api/career/opportunities/analyze — Ingestion e Analisi Live di una Nuova Opportunità Reale
+app.post('/api/career/opportunities/analyze', async (req, res) => {
+  try {
+    const { getProfile } = require('./career/careerProfile');
+    const { createOpportunity, getOpportunity } = require('./career/careerOpportunities');
+    const { analyzeOpportunity } = require('./career/opportunityIntelligence');
+    const { evaluateAndPersistFit } = require('./career/fitScorer');
+    const { prepareApplication } = require('./career/applicationIntelligence');
+    const { getNextAction } = require('./career/nextActionEngine');
+    const { createAction, updateActionStatus } = require('./career/careerActions');
+    const { getOpportunityDetail } = require('./career/careerDashboard');
+
+    const profile = getProfile();
+    const profileId = profile?.id || 1;
+
+    const {
+      title,
+      company_name,
+      description,
+      source = 'DIRECT',
+      source_url = '',
+      location = 'Remote',
+      remote_type = 'REMOTE',
+      seniority = 'SENIOR',
+      salary_min,
+      salary_max,
+      hourly_rate_min,
+      hourly_rate_max,
+      opportunity_type = 'FULL_TIME',
+      deadline
+    } = req.body;
+
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Titolo e descrizione dell\'annuncio sono obbligatori' });
+    }
+
+    // 1. Crea l'opportunità
+    const oppId = createOpportunity({
+      profile_id: profileId,
+      title: title.trim(),
+      company_name: (company_name || 'Azienda non specificata').trim(),
+      description: description.trim(),
+      source,
+      source_url: source_url ? source_url.trim() : undefined,
+      location: location.trim(),
+      remote_type,
+      seniority,
+      opportunity_type,
+      salary_min: salary_min ? parseFloat(salary_min) : undefined,
+      salary_max: salary_max ? parseFloat(salary_max) : undefined,
+      hourly_rate_min: hourly_rate_min ? parseFloat(hourly_rate_min) : undefined,
+      hourly_rate_max: hourly_rate_max ? parseFloat(hourly_rate_max) : undefined,
+      deadline: deadline || undefined,
+      status: 'NEW'
+    });
+
+    // 2. Estrai requisiti semantici
+    let analysis = null;
+    try {
+      analysis = await analyzeOpportunity(oppId);
+    } catch (extractErr: any) {
+      console.warn('[API] Warning estrazione requisiti con Gemini:', extractErr.message);
+    }
+
+    // 3. Calcola Fit deterministico
+    const fitResult = evaluateAndPersistFit(oppId);
+
+    // 4. Prepara bozza candidatura e valida con Proposal Guard se fit sufficiente
+    let applicationResult: any = null;
+    let createdActionId: number | null = null;
+
+    if (fitResult.fitScore >= 60) {
+      try {
+        applicationResult = await prepareApplication(oppId);
+        const nextAct = getNextAction(oppId);
+        if (nextAct) {
+          createdActionId = createAction({
+            profileId,
+            opportunityId: oppId,
+            applicationId: applicationResult?.application?.id,
+            actionType: nextAct.actionType,
+            priority: nextAct.priority,
+            status: 'SUGGESTED',
+            source: 'FIT_ENGINE',
+            reason: nextAct.reason,
+            algorithmVersion: 1
+          });
+
+          // Se è un invio o creazione candidatura, mettila in PENDING_APPROVAL per il sign-off umano
+          if (['SUBMIT_APPLICATION', 'CREATE_APPLICATION'].includes(nextAct.actionType)) {
+            updateActionStatus(createdActionId, 'PENDING_APPROVAL', 'FIT_ENGINE', 'In attesa di approvazione umana');
+          }
+        }
+      } catch (appErr: any) {
+        console.warn('[API] Warning preparazione candidatura:', appErr.message);
+      }
+    }
+
+    // 5. Restituisci il dettaglio 360° aggiornato
+    const detail = getOpportunityDetail(oppId);
+
+    res.json({
+      success: true,
+      message: 'Opportunità creata, analizzata e valutata con successo',
+      opportunityId: oppId,
+      fitScore: fitResult.fitScore,
+      recommendation: fitResult.recommendation,
+      actionId: createdActionId,
+      detail
+    });
+  } catch (err: any) {
+    console.error('[API] Errore analisi opportunità:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 25. GET /api/career/opportunities/:id/intelligence
 app.get('/api/career/opportunities/:id/intelligence', (req, res) => {
   try {

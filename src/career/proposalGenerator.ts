@@ -31,7 +31,7 @@ export async function generateProposal(
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
     const evidenceBulletPoints = topEvidence
       .map(e => `- ${e.requirement_name}: ${e.evidence_title} (${e.source_url || e.source_type})`)
