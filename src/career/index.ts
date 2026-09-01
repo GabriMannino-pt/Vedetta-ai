@@ -6,3 +6,6 @@ export * from './opportunityNormalizer';
 export * from './requirementRepository';
 export * from './requirementExtractor';
 export * from './opportunityIntelligence';
+export * from './fitTypes';
+export * from './fitExplainability';
+export * from './fitScorer';

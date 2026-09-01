@@ -626,9 +626,26 @@ export interface CareerOpportunity {
   risk_signals_json?: string | null;
   extraction_confidence?: number | null;
   analyzed_at?: string | null;
+  
+  // Fit Scoring & Prioritization
   fit_score?: number | null;
+  application_priority?: number | null;
   evidence_score?: number | null;
   priority_score?: number | null;
+  technical_match?: number | null;
+  experience_match?: number | null;
+  seniority_match?: number | null;
+  domain_match?: number | null;
+  remote_match?: number | null;
+  language_match?: number | null;
+  must_have_coverage?: number | null;
+  nice_to_have_coverage?: number | null;
+  critical_gap?: boolean | null;
+  fit_recommendation?: ApplicationRecommendation | null;
+  fit_breakdown_json?: string | null;
+  fit_explanation_json?: string | null;
+  fit_calculated_at?: string | null;
+  fit_algorithm_version?: number | null;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -681,6 +698,53 @@ export interface OpportunityAnalysis {
   analyzedAt?: string;
   analysis_version?: number;
 }
+
+// ─────────────────────────────────────────────────────────────
+// 🎯 CAREER-001.4 — DETERMINISTIC FIT SCORING TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type ApplicationRecommendation = 
+  | 'STRONG_MATCH'
+  | 'GOOD_MATCH'
+  | 'POSSIBLE_MATCH'
+  | 'LOW_PRIORITY'
+  | 'DO_NOT_APPLY';
+
+export interface FitScoreBreakdown {
+  technicalMatch: number;      // 30% weight
+  experienceMatch: number;     // 15% weight
+  seniorityMatch: number;      // 10% weight
+  domainMatch: number;         // 10% weight
+  remoteMatch: number;         // 5% weight
+  languageMatch: number;       // 5% weight
+  mustHaveCoverage: number;    // 15% weight
+  evidenceStrength: number;    // 10% weight
+  niceToHaveCoverage: number;  // Secondary metric (0-100)
+  salaryCompatibility: number; // Secondary metric (0-100, 50 if missing)
+}
+
+export interface FitExplanation {
+  strengths: string[];
+  gaps: string[];
+  criticalGaps: string[];
+  matchedRequirements: string[];
+  missingRequirements: string[];
+  evidenceHighlights: string[];
+  recommendation: ApplicationRecommendation;
+}
+
+export interface FitEvaluationResult {
+  opportunityId: number;
+  fitScore: number;                 // 0-100
+  applicationPriority: number;      // 0-100
+  breakdown: FitScoreBreakdown;
+  criticalGap: boolean;
+  recommendation: ApplicationRecommendation;
+  explanation: FitExplanation;
+  calculatedAt: string;
+  algorithmVersion: number;
+}
+
 
 
 

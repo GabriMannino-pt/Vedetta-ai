@@ -178,6 +178,14 @@ export function initDb(): void {
     console.warn('[DB] Migrazioni 1.4 warning:', e.message);
   }
 
+  // Migrazioni Vedetta 1.5 (Fit Scoring Persistence)
+  try {
+    const { runMigrations1_5 } = require('./migrations_1_5');
+    runMigrations1_5(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.5 warning:', e.message);
+  }
+
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
 

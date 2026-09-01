@@ -45,7 +45,11 @@ export function createOpportunity(rawOpp: any): number {
       analysis_status, analysis_summary, role_focus_json, responsibilities_json,
       technologies_json, languages_json, seniority_signals_json, remote_signals_json,
       risk_signals_json, extraction_confidence, analyzed_at,
-      fit_score, evidence_score, priority_score
+      fit_score, application_priority, evidence_score, priority_score,
+      technical_match, experience_match, seniority_match, domain_match,
+      remote_match, language_match, must_have_coverage, nice_to_have_coverage,
+      critical_gap, fit_recommendation, fit_breakdown_json, fit_explanation_json,
+      fit_calculated_at, fit_algorithm_version
     ) VALUES (
       ?, ?, ?, ?, ?,
       ?, ?, ?, ?, ?,
@@ -55,7 +59,11 @@ export function createOpportunity(rawOpp: any): number {
       ?, ?, ?, ?,
       ?, ?, ?, ?,
       ?, ?, ?,
-      ?, ?, ?
+      ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      ?, ?, ?, ?,
+      ?, ?
     )
   `);
 
@@ -95,8 +103,23 @@ export function createOpportunity(rawOpp: any): number {
     opp.extraction_confidence || null,
     opp.analyzed_at || null,
     opp.fit_score || null,
+    opp.application_priority || null,
     opp.evidence_score || null,
-    opp.priority_score || null
+    opp.priority_score || null,
+    opp.technical_match || null,
+    opp.experience_match || null,
+    opp.seniority_match || null,
+    opp.domain_match || null,
+    opp.remote_match || null,
+    opp.language_match || null,
+    opp.must_have_coverage || null,
+    opp.nice_to_have_coverage || null,
+    opp.critical_gap ? 1 : 0,
+    opp.fit_recommendation || null,
+    opp.fit_breakdown_json || null,
+    opp.fit_explanation_json || null,
+    opp.fit_calculated_at || null,
+    opp.fit_algorithm_version || 1
   );
 
   return info.lastInsertRowid as number;
@@ -134,7 +157,11 @@ export function updateOpportunity(opp: CareerOpportunity): void {
       analysis_status = ?, analysis_summary = ?, role_focus_json = ?, responsibilities_json = ?,
       technologies_json = ?, languages_json = ?, seniority_signals_json = ?, remote_signals_json = ?,
       risk_signals_json = ?, extraction_confidence = ?, analyzed_at = ?,
-      fit_score = ?, evidence_score = ?, priority_score = ?, last_seen_at = ?
+      fit_score = ?, application_priority = ?, evidence_score = ?, priority_score = ?,
+      technical_match = ?, experience_match = ?, seniority_match = ?, domain_match = ?,
+      remote_match = ?, language_match = ?, must_have_coverage = ?, nice_to_have_coverage = ?,
+      critical_gap = ?, fit_recommendation = ?, fit_breakdown_json = ?, fit_explanation_json = ?,
+      fit_calculated_at = ?, fit_algorithm_version = ?, last_seen_at = ?
     WHERE id = ?
   `);
 
@@ -167,8 +194,23 @@ export function updateOpportunity(opp: CareerOpportunity): void {
     normalized.extraction_confidence || null,
     normalized.analyzed_at || null,
     normalized.fit_score || null,
+    normalized.application_priority || null,
     normalized.evidence_score || null,
     normalized.priority_score || null,
+    normalized.technical_match || null,
+    normalized.experience_match || null,
+    normalized.seniority_match || null,
+    normalized.domain_match || null,
+    normalized.remote_match || null,
+    normalized.language_match || null,
+    normalized.must_have_coverage || null,
+    normalized.nice_to_have_coverage || null,
+    normalized.critical_gap ? 1 : 0,
+    normalized.fit_recommendation || null,
+    normalized.fit_breakdown_json || null,
+    normalized.fit_explanation_json || null,
+    normalized.fit_calculated_at || null,
+    normalized.fit_algorithm_version || 1,
     now,
     opp.id
   );
@@ -196,7 +238,6 @@ export function findByFingerprint(fingerprint: string): CareerOpportunity | null
 export function updateStatus(id: number, status: OpportunityStatus): void {
   const db = getDb();
   const now = new Date().toISOString();
-  // If status is APPLIED, set applied_at to now if not set
   if (status === 'APPLIED') {
     db.prepare('UPDATE career_opportunities SET status = ?, applied_at = COALESCE(applied_at, ?), last_seen_at = ? WHERE id = ?')
       .run(status, now, now, id);
@@ -262,7 +303,22 @@ function mapRowToOpportunity(r: any): CareerOpportunity {
     extraction_confidence: r.extraction_confidence,
     analyzed_at: r.analyzed_at,
     fit_score: r.fit_score,
+    application_priority: r.application_priority,
     evidence_score: r.evidence_score,
-    priority_score: r.priority_score
+    priority_score: r.priority_score,
+    technical_match: r.technical_match,
+    experience_match: r.experience_match,
+    seniority_match: r.seniority_match,
+    domain_match: r.domain_match,
+    remote_match: r.remote_match,
+    language_match: r.language_match,
+    must_have_coverage: r.must_have_coverage,
+    nice_to_have_coverage: r.nice_to_have_coverage,
+    critical_gap: Boolean(r.critical_gap),
+    fit_recommendation: r.fit_recommendation,
+    fit_breakdown_json: r.fit_breakdown_json,
+    fit_explanation_json: r.fit_explanation_json,
+    fit_calculated_at: r.fit_calculated_at,
+    fit_algorithm_version: r.fit_algorithm_version
   };
 }

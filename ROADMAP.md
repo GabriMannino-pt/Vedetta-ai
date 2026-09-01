@@ -51,7 +51,7 @@
 - [x] **CAREER-001.1** Career Profile, Skills & Evidence Registry Foundation (SQLite + Validations)
 - [x] **CAREER-001.2** Universal Opportunity Core & Persistence Foundation (Deduplication + Normalizer)
 - [x] **CAREER-001.3** Opportunity Intelligence & Semantic Requirement Extraction (Gemini + Evidence Guard)
-- [ ] **CAREER-001.4** Deterministic Fit Scoring Engine & Profile Matcher
+- [x] **CAREER-001.4** Deterministic Fit Scoring Engine & Profile Matcher
 - [ ] **CAREER-001.5** Evidence Matcher & Verification Engine
 - [ ] **CAREER-001.6** Priority & Expected Value Scorer
 - [ ] **CAREER-001.7** LinkedIn Integration Layer

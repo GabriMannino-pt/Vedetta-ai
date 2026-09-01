@@ -44,9 +44,11 @@ export function createProfile(profile: CareerProfile): number {
   return info.lastInsertRowid as number;
 }
 
-export function getProfile(): CareerProfile | null {
+export function getProfile(id?: number): CareerProfile | null {
   const db = getDb();
-  const row = db.prepare('SELECT * FROM career_profile ORDER BY id DESC LIMIT 1').get() as any;
+  const row = id
+    ? db.prepare('SELECT * FROM career_profile WHERE id = ?').get(id) as any
+    : db.prepare('SELECT * FROM career_profile ORDER BY id DESC LIMIT 1').get() as any;
   if (!row) return null;
   return {
     id: row.id,
