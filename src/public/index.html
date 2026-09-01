@@ -285,152 +285,351 @@
       </div>
     </div>
 
-    <!-- VIEW 4: CAREER INTELLIGENCE OS -->
+    <!-- VIEW 4: CAREER OS COMMAND CENTER (PRODUCT GRADE UX) -->
     <div id="view-career" class="view-section">
       
-      <!-- Career KPI Grid -->
-      <section class="stats-container" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));">
-        <div class="stat-card">
-          <div class="stat-header"><span class="stat-label">Opportunità Totali</span><i data-lucide="compass" class="stat-menu-icon"></i></div>
-          <div class="stat-value-group"><span class="stat-value" id="stat-career-opps">0</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header"><span class="stat-label">Strong Matches (Fit ≥ 70)</span><i data-lucide="sparkles" class="stat-menu-icon"></i></div>
-          <div class="stat-value-group"><span class="stat-value" id="stat-career-strong">0</span><span class="stat-change-badge">High Value</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header"><span class="stat-label">Candidature Attive</span><i data-lucide="send" class="stat-menu-icon"></i></div>
-          <div class="stat-value-group"><span class="stat-value" id="stat-career-apps">0</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header"><span class="stat-label">Response Rate</span><i data-lucide="message-square" class="stat-menu-icon"></i></div>
-          <div class="stat-value-group"><span class="stat-value" id="stat-career-response-rate">0%</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header"><span class="stat-label">Interview Rate</span><i data-lucide="calendar" class="stat-menu-icon"></i></div>
-          <div class="stat-value-group"><span class="stat-value" id="stat-career-interview-rate">0%</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header"><span class="stat-label">Win Rate</span><i data-lucide="trophy" class="stat-menu-icon"></i></div>
-          <div class="stat-value-group"><span class="stat-value" id="stat-career-win-rate">0%</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header"><span class="stat-label">Realized Revenue</span><i data-lucide="dollar-sign" class="stat-menu-icon"></i></div>
-          <div class="stat-value-group"><span class="stat-value" id="stat-career-revenue">€0</span><span class="stat-change-badge">Confirmed</span></div>
-        </div>
-      </section>
-
-      <!-- Alert Banner -->
-      <div id="career-alerts-container" style="margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px;"></div>
-
-      <!-- Career Funnel Stage Flow -->
-      <div class="card-section" style="margin-bottom: 24px; background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h3 style="font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-            <i data-lucide="filter"></i> Career Intelligence Conversion Funnel
-          </h3>
-          <span style="font-size: 12px; color: var(--db-gray-text);" id="funnel-updated-time"></span>
-        </div>
-        <div id="career-funnel-stages" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); gap: 8px;"></div>
-      </div>
-
-      <!-- Human Approval & Execution Queue -->
-      <div class="card-section" style="margin-bottom: 24px; background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <div>
-            <h3 style="font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-              <i data-lucide="shield-check"></i> Human-in-the-Loop Action Queue
-            </h3>
-            <span style="font-size: 12px; color: var(--db-gray-text);">Azioni operative pianificate che richiedono supervisione o handoff umano</span>
+      <!-- Career OS Header & Status Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h2 style="font-size: 22px; font-weight: 700; color: #fff; margin: 0;">Career OS</h2>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600;">Autonomous & Verified</span>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(10, 132, 255, 0.15); color: #0A84FF; border: 1px solid rgba(10, 132, 255, 0.3); font-weight: 600;">Human-in-the-Loop Active</span>
           </div>
-          <button class="btn-secondary" onclick="loadCareerActions()" style="padding: 6px 12px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-            <i data-lucide="refresh-cw"></i> Sincronizza Azioni
+          <p style="font-size: 13px; color: var(--db-gray-text); margin: 4px 0 0 0;">Command Center per la gestione di opportunità, candidature evidence-based e ottimizzazione strategica</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span style="font-size: 12px; color: var(--db-gray-text);" id="career-last-sync-time">Sincronizzato: Adesso</span>
+          <button class="btn-secondary" onclick="loadCareerDashboard()" style="padding: 7px 14px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="refresh-cw"></i> Sincronizza
           </button>
         </div>
-        <div id="career-actions-container" style="display: flex; flex-direction: column; gap: 10px;">
-          <!-- Populated dynamically -->
+      </div>
+
+      <!-- Career OS Sub-Navigation Bar -->
+      <div class="career-nav-tabs" style="display: flex; gap: 8px; border-bottom: 1px solid var(--db-card-border); margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px;">
+        <button class="tab-btn active" id="tab-career-overview" onclick="switchCareerTab('overview')">
+          <i data-lucide="layout-dashboard" style="width: 15px; height: 15px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></i> Overview
+        </button>
+        <button class="tab-btn" id="tab-career-opportunities" onclick="switchCareerTab('opportunities')">
+          <i data-lucide="compass" style="width: 15px; height: 15px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></i> Opportunities
+        </button>
+        <button class="tab-btn" id="tab-career-applications" onclick="switchCareerTab('applications')">
+          <i data-lucide="file-text" style="width: 15px; height: 15px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></i> Applications
+        </button>
+        <button class="tab-btn" id="tab-career-actions" onclick="switchCareerTab('actions')">
+          <i data-lucide="shield-check" style="width: 15px; height: 15px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></i> Action Center
+        </button>
+        <button class="tab-btn" id="tab-career-intelligence" onclick="switchCareerTab('intelligence')">
+          <i data-lucide="brain-circuit" style="width: 15px; height: 15px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></i> Intelligence
+        </button>
+        <button class="tab-btn" id="tab-career-performance" onclick="switchCareerTab('performance')">
+          <i data-lucide="line-chart" style="width: 15px; height: 15px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></i> Performance
+        </button>
+        <button class="tab-btn" id="tab-career-integrations" onclick="switchCareerTab('integrations')">
+          <i data-lucide="link-2" style="width: 15px; height: 15px; display: inline-block; vertical-align: -2px; margin-right: 4px;"></i> Integrations
+        </button>
+      </div>
+
+      <!-- SUBVIEW 1: OVERVIEW (COMMAND CENTER) -->
+      <div id="career-subview-overview" class="career-subview active">
+        
+        <!-- Primary Next Best Action Hero Card -->
+        <div id="career-hero-next-action" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(10, 132, 255, 0.08) 100%); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: var(--db-radius-lg); padding: 22px; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div style="flex: 1; min-width: 280px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: #10b981; color: #000;">RACCOMANDAZIONE PRIMARIA</span>
+                <span id="hero-action-priority" style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(255,69,58,0.2); color: #ff453a;">CRITICAL</span>
+              </div>
+              <h3 id="hero-action-title" style="font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 6px 0;">Nessuna azione urgente in sospeso</h3>
+              <p id="hero-action-reason" style="font-size: 13px; color: var(--db-gray-text); margin: 0 0 14px 0;">Il sistema monitora costantemente le opportunità per suggerire le azioni ad alto rendimento.</p>
+              
+              <!-- Progressive Disclosure Pill Highlights -->
+              <div id="hero-action-evidence-pills" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 180px;" id="hero-action-cta-container">
+              <!-- Filled dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Career KPI Grid -->
+        <section class="stats-container" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="stat-header"><span class="stat-label">Opportunità Attive</span><i data-lucide="compass" class="stat-menu-icon"></i></div>
+            <div class="stat-value-group"><span class="stat-value" id="stat-career-opps">0</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span class="stat-label">Strong Matches</span><i data-lucide="sparkles" class="stat-menu-icon"></i></div>
+            <div class="stat-value-group"><span class="stat-value" id="stat-career-strong">0</span><span class="stat-change-badge">High Fit</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span class="stat-label">Candidature</span><i data-lucide="send" class="stat-menu-icon"></i></div>
+            <div class="stat-value-group"><span class="stat-value" id="stat-career-apps">0</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span class="stat-label">Response Rate</span><i data-lucide="message-square" class="stat-menu-icon"></i></div>
+            <div class="stat-value-group"><span class="stat-value" id="stat-career-response-rate">0%</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span class="stat-label">Interview Rate</span><i data-lucide="calendar" class="stat-menu-icon"></i></div>
+            <div class="stat-value-group"><span class="stat-value" id="stat-career-interview-rate">0%</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span class="stat-label">Win Rate</span><i data-lucide="trophy" class="stat-menu-icon"></i></div>
+            <div class="stat-value-group"><span class="stat-value" id="stat-career-win-rate">0%</span></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span class="stat-label">Confirmed Revenue</span><i data-lucide="dollar-sign" class="stat-menu-icon"></i></div>
+            <div class="stat-value-group"><span class="stat-value" id="stat-career-revenue">€0</span><span class="stat-change-badge">Cash Won</span></div>
+          </div>
+        </section>
+
+        <!-- Alert Stream Banner -->
+        <div id="career-alerts-container" style="margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px;"></div>
+
+        <!-- Quick Overview Split: Top Opportunities & Quick Funnel -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+          <div class="card-section" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="font-size: 15px; font-weight: 600; color: #fff;">Opportunità in Evidenza</h3>
+              <button class="btn-secondary" onclick="switchCareerTab('opportunities')" style="font-size: 12px; padding: 4px 10px;">Vedi tutte</button>
+            </div>
+            <div id="overview-top-opps-container" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Filled dynamically -->
+            </div>
+          </div>
+
+          <div class="card-section" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="font-size: 15px; font-weight: 600; color: #fff;">Conversion Funnel Snapshot</h3>
+              <button class="btn-secondary" onclick="switchCareerTab('performance')" style="font-size: 12px; padding: 4px 10px;">Dettaglio</button>
+            </div>
+            <div id="career-funnel-stages" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 6px;"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUBVIEW 2: OPPORTUNITIES (INTELLIGENT QUEUE) -->
+      <div id="career-subview-opportunities" class="career-subview" style="display: none;">
+        <div class="table-card" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 600; color: #fff;">Opportunity Command Queue</h3>
+              <span style="font-size: 12px; color: var(--db-gray-text);">Classificazione automatica, Fit Scoring e Next Actions</span>
+            </div>
+            
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="text" id="career-search" placeholder="Cerca ruolo o azienda..." style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px;" oninput="loadCareerQueue()">
+              <select id="career-filter-rec" style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px;" onchange="loadCareerQueue()">
+                <option value="">Tutte le Raccomandazioni</option>
+                <option value="STRONG_MATCH">Strong Match</option>
+                <option value="GOOD_MATCH">Good Match</option>
+                <option value="POSSIBLE_MATCH">Possible Match</option>
+                <option value="LOW_PRIORITY">Low Priority</option>
+              </select>
+              <select id="career-filter-status" style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px;" onchange="loadCareerQueue()">
+                <option value="">Tutti gli Stati</option>
+                <option value="NEW">Nuove</option>
+                <option value="ANALYZED">Analizzate</option>
+                <option value="READY">Pronte per Invio</option>
+                <option value="SUBMITTED">Inviate</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="leads-table">
+              <thead>
+                <tr>
+                  <th>Ruolo & Azienda</th>
+                  <th>Fonte / Remote</th>
+                  <th>Match Fit</th>
+                  <th>Evidence</th>
+                  <th>Priority</th>
+                  <th>Stato</th>
+                  <th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="career-queue-body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Adaptive Career Optimization & Strategy Intelligence -->
-      <div class="card-section" style="margin-bottom: 24px; background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+      <!-- SUBVIEW 3: APPLICATIONS (WORKSPACE & PROPOSAL GUARD) -->
+      <div id="career-subview-applications" class="career-subview" style="display: none;">
+        <div class="card-section" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 600; color: #fff;">Application Pipeline & Proposal Workspace</h3>
+              <span style="font-size: 12px; color: var(--db-gray-text);">Candidature costruite su evidenze reali con validazione Proposal Guard</span>
+            </div>
+          </div>
+          <div id="career-applications-pipeline-container" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBVIEW 4: ACTIONS (HUMAN-IN-THE-LOOP ACTION CENTER) -->
+      <div id="career-subview-actions" class="career-subview" style="display: none;">
+        <div class="card-section" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 600; color: #fff;">Human-in-the-Loop Action Center</h3>
+              <span style="font-size: 12px; color: var(--db-gray-text);">Decisioni operative e pacchetti di handoff in attesa di approvazione umana</span>
+            </div>
+            <button class="btn-secondary" onclick="loadCareerActions()" style="padding: 6px 12px; font-size: 13px;">
+              <i data-lucide="refresh-cw"></i> Sincronizza
+            </button>
+          </div>
+          <div id="career-actions-container" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBVIEW 5: INTELLIGENCE (CALIBRATION & OPTIMIZATION) -->
+      <div id="career-subview-intelligence" class="career-subview" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h3 style="font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
-              <i data-lucide="trending-up"></i> Adaptive Strategy & Optimization Engine
-            </h3>
-            <span style="font-size: 12px; color: var(--db-gray-text);">Calibrazione empirica dei modelli, Expected Value e proposte di adattamento con sample protection</span>
+            <h3 style="font-size: 16px; font-weight: 600; color: #fff;">Career Intelligence & Strategy Engine</h3>
+            <span style="font-size: 12px; color: var(--db-gray-text);">Calibrazione predittiva, Expected Value e proposte di adattamento con sample protection (10/30)</span>
           </div>
           <button class="btn-primary" onclick="runOptimizationPipeline()" style="padding: 6px 14px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
             <i data-lucide="zap"></i> Esegui Ottimizzazione
           </button>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
-          <!-- Calibration Summary -->
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px;">
-            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #fff;">📊 Fit Calibration (Predicted vs Observed)</h4>
-            <div id="opt-calibration-table" style="font-size: 12px; color: var(--db-gray-text);">In attesa di dati...</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
+          <!-- Calibration Table -->
+          <div style="background: var(--db-card-bg); border: 1px solid var(--db-card-border); border-radius: var(--db-radius-lg); padding: 18px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #fff;">📊 Fit Calibration (Predicted vs Observed)</h4>
+            <div id="opt-calibration-table" style="font-size: 12px; color: var(--db-gray-text);">Caricamento dati...</div>
           </div>
           <!-- Channel Performance -->
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px;">
-            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #fff;">🌐 Channel & Domain Intelligence</h4>
-            <div id="opt-channel-insights" style="font-size: 12px; color: var(--db-gray-text);">In attesa di dati...</div>
+          <div style="background: var(--db-card-bg); border: 1px solid var(--db-card-border); border-radius: var(--db-radius-lg); padding: 18px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #fff;">🌐 Channel & Domain Intelligence</h4>
+            <div id="opt-channel-insights" style="font-size: 12px; color: var(--db-gray-text);">Caricamento dati...</div>
           </div>
           <!-- Adaptation Proposals -->
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px;">
-            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #fff;">💡 Proposed Model Adaptations</h4>
-            <div id="opt-adaptations-list" style="font-size: 12px; color: var(--db-gray-text);">Nessun adattamento proposto.</div>
+          <div style="background: var(--db-card-bg); border: 1px solid var(--db-card-border); border-radius: var(--db-radius-lg); padding: 18px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #fff;">💡 Proposed Model Adaptations</h4>
+            <div id="opt-adaptations-list" style="font-size: 12px; color: var(--db-gray-text);">Nessuna proposta attiva.</div>
           </div>
         </div>
       </div>
 
-      <!-- Opportunity Queue Table & Controls -->
-      <div class="table-card" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-          <div>
-            <h3 style="font-size: 16px; font-weight: 600;">Opportunity Queue (Operational Workflow)</h3>
-            <span style="font-size: 12px; color: var(--db-gray-text);">Classificazione, Fit Scoring, Strategia e Tracciamento Esiti</span>
-          </div>
-          
-          <!-- Filters Toolbar -->
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <input type="text" id="career-search" placeholder="Cerca ruolo o azienda..." style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px;" oninput="loadCareerQueue()">
-            <select id="career-filter-rec" style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px;" onchange="loadCareerQueue()">
-              <option value="">Tutte le Raccomandazioni</option>
-              <option value="STRONG_MATCH">Strong Match</option>
-              <option value="GOOD_MATCH">Good Match</option>
-              <option value="POSSIBLE_MATCH">Possible Match</option>
-              <option value="LOW_PRIORITY">Low Priority</option>
-            </select>
-            <select id="career-filter-status" style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px;" onchange="loadCareerQueue()">
-              <option value="">Tutti gli Stati</option>
-              <option value="NEW">Nuove</option>
-              <option value="ANALYZED">Analizzate</option>
-              <option value="READY">Pronte per Invio</option>
-              <option value="SUBMITTED">Inviate</option>
-            </select>
-            <button class="btn-secondary" onclick="loadCareerDashboard()" style="padding: 6px 12px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-              <i data-lucide="refresh-cw"></i> Aggiorna
-            </button>
+      <!-- SUBVIEW 6: PERFORMANCE (FUNNEL & FINANCIAL REVENUE TRUTH) -->
+      <div id="career-subview-performance" class="career-subview" style="display: none;">
+        <div class="card-section" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+          <h3 style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 14px;">End-to-End Conversion Funnel</h3>
+          <div id="career-perf-funnel-stages" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-bottom: 24px;"></div>
+
+          <h3 style="font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 14px;">Revenue Truth & Unit Economics</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px;">
+              <span style="font-size: 12px; color: var(--db-gray-text);">Total Confirmed Cash</span>
+              <div style="font-size: 20px; font-weight: 700; color: #10b981; margin-top: 4px;" id="perf-total-revenue">€0</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px;">
+              <span style="font-size: 12px; color: var(--db-gray-text);">Avg. Value per Application</span>
+              <div style="font-size: 20px; font-weight: 700; color: #fff; margin-top: 4px;" id="perf-rev-per-app">€0</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px;">
+              <span style="font-size: 12px; color: var(--db-gray-text);">Avg. Value per Interview</span>
+              <div style="font-size: 20px; font-weight: 700; color: #fff; margin-top: 4px;" id="perf-rev-per-interview">€0</div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="table-responsive">
-          <table class="leads-table">
-            <thead>
-              <tr>
-                <th>Ruolo & Azienda</th>
-                <th>Fonte / Remote</th>
-                <th>Fit Score</th>
-                <th>Priority</th>
-                <th>Raccomandazione</th>
-                <th>Stato Operativo</th>
-                <th>Azioni</th>
-              </tr>
-            </thead>
-            <tbody id="career-queue-body"></tbody>
-          </table>
+      <!-- SUBVIEW 7: INTEGRATIONS HUB (UPWORK & LINKEDIN ARCHITECTURE) -->
+      <div id="career-subview-integrations" class="career-subview" style="display: none;">
+        <div class="card-section" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+          <div style="margin-bottom: 20px;">
+            <h3 style="font-size: 16px; font-weight: 600; color: #fff;">External Channel Integrations Hub</h3>
+            <span style="font-size: 12px; color: var(--db-gray-text);">Collega i canali esterni per auto-discovery e sincronizzazione delle candidature</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <!-- Upwork Integration Card -->
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 15px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="globe"></i> Upwork
+                  </h4>
+                  <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.08); color: var(--db-gray-text); font-weight: 600;">Not connected</span>
+                </div>
+                <p style="font-size: 12px; color: var(--db-gray-text); line-height: 1.4; margin-bottom: 12px;">Auto-discovery feed RSS, estrazione requisiti da job post e proposal drafting specializzato.</p>
+                <div style="font-size: 11px; color: var(--db-gray-text); margin-bottom: 14px;">
+                  <i data-lucide="check-circle" style="width: 12px; height: 12px; display: inline;"></i> Ingestion & Proposal Ready
+                </div>
+              </div>
+              <button class="btn-secondary" style="width: 100%; font-size: 12px; padding: 8px; opacity: 0.6; cursor: not-allowed;" title="Disponibile in CAREER-002.0">
+                Collega Upwork (Coming in 002.0)
+              </button>
+            </div>
+
+            <!-- LinkedIn Integration Card -->
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 15px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="users"></i> LinkedIn
+                  </h4>
+                  <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.08); color: var(--db-gray-text); font-weight: 600;">Not connected</span>
+                </div>
+                <p style="font-size: 12px; color: var(--db-gray-text); line-height: 1.4; margin-bottom: 12px;">Ricerca semantica posizioni aperte, analisi network e gestione outreach verso hiring managers.</p>
+                <div style="font-size: 11px; color: var(--db-gray-text); margin-bottom: 14px;">
+                  <i data-lucide="check-circle" style="width: 12px; height: 12px; display: inline;"></i> Ingestion & Outreach Ready
+                </div>
+              </div>
+              <button class="btn-secondary" style="width: 100%; font-size: 12px; padding: 8px; opacity: 0.6; cursor: not-allowed;" title="Disponibile in CAREER-002.0">
+                Collega LinkedIn (Coming in 002.0)
+              </button>
+            </div>
+
+            <!-- Direct Sourcing Card -->
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 15px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="link"></i> Direct Sourcing
+                  </h4>
+                  <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 600;">Active</span>
+                </div>
+                <p style="font-size: 12px; color: var(--db-gray-text); line-height: 1.4; margin-bottom: 12px;">Ingestion diretta da link aziendali, estrazione automatica requisiti e generazione del pacchetto di handoff.</p>
+              </div>
+              <button class="btn-primary" style="width: 100%; font-size: 12px; padding: 8px;" onclick="switchCareerTab('opportunities')">
+                Gestisci Opportunità
+              </button>
+            </div>
+
+            <!-- Referral Card -->
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 15px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="share-2"></i> Referral Network
+                  </h4>
+                  <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 600;">Active</span>
+                </div>
+                <p style="font-size: 12px; color: var(--db-gray-text); line-height: 1.4; margin-bottom: 12px;">Gestione candidature mediate da contatti diretti con enfasi personalizzata sulle prove.</p>
+              </div>
+              <button class="btn-primary" style="width: 100%; font-size: 12px; padding: 8px;" onclick="switchCareerTab('opportunities')">
+                Gestisci Referral
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

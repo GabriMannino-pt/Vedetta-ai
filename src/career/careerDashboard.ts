@@ -107,6 +107,7 @@ export interface CareerDashboardSummary {
   pendingApprovalsCount: number;
   nextActions: any[];
   executionMetrics: any;
+  optimization?: any;
   funnel: CareerFunnelReport;
   metrics: any;
   alerts: CareerAlert[];
@@ -137,6 +138,10 @@ export function getCareerDashboard(): CareerDashboardSummary {
     const { calculateExecutionMetrics } = require('./careerExecutionMetrics');
     nextActions = getNextActions().slice(0, 10);
     executionMetrics = calculateExecutionMetrics();
+  } catch (e: any) {
+    // Graceful fallback
+  }
+
   let optimization: any = null;
   try {
     const { getOptimizationSnapshot } = require('./careerOptimization');

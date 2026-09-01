@@ -1134,6 +1134,53 @@ app.get('/api/career/optimization/runs', (req, res) => {
   }
 });
 
+// 48. GET /api/career/integrations
+app.get('/api/career/integrations', (req, res) => {
+  try {
+    const integrations = [
+      {
+        id: 'upwork',
+        name: 'Upwork',
+        category: 'FREELANCE_MARKETPLACE',
+        status: 'NOT_CONNECTED',
+        description: 'Auto-discovery delle opportunità Upwork, sincronizzazione feed RSS e monitoraggio contratti.',
+        capabilities: ['Job Feed Sync', 'Bid Proposal Drafting', 'Contract Milestone Tracking'],
+        badge: 'Coming in 002.0'
+      },
+      {
+        id: 'linkedin',
+        name: 'LinkedIn',
+        category: 'PROFESSIONAL_NETWORK',
+        status: 'NOT_CONNECTED',
+        description: 'Ricerca semantica posizioni aperte, analisi network e gestione outreach verso hiring managers.',
+        capabilities: ['Direct Job Ingestion', 'Recruiter InMail Drafting', 'Application Stage Sync'],
+        badge: 'Coming in 002.0'
+      },
+      {
+        id: 'direct',
+        name: 'Direct Sourcing',
+        category: 'DIRECT_APPLICATION',
+        status: 'AVAILABLE',
+        description: 'Ingestion manuale o via link di opportunità da siti aziendali con estrazione requisiti automatica.',
+        capabilities: ['URL Ingestion', 'Custom Requirements Parser', 'Handoff Packager'],
+        badge: 'Active'
+      },
+      {
+        id: 'referral',
+        name: 'Referral Network',
+        category: 'WARM_INTRO',
+        status: 'AVAILABLE',
+        description: 'Gestione opportunità generate da presentazioni e contatti diretti del network.',
+        capabilities: ['Warm Intro Context', 'Custom Evidence Emphasis', 'High-Trust Fit Scoring'],
+        badge: 'Active'
+      }
+    ];
+    res.json({ success: true, count: integrations.length, data: integrations });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. File Statici: Serviamo la Dashboard Web (HTML/JS)
 app.use(express.static(path.join(__dirname, '..', 'src', 'public')));
 

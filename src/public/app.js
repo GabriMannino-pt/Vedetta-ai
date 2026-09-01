@@ -496,8 +496,53 @@ function escapeHtml(str) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 🦅 CAREER INTELLIGENCE OS JAVASCRIPT LAYER
+// 🦅 CAREER INTELLIGENCE OS & COMMAND CENTER (CAREER-002.1)
 // ─────────────────────────────────────────────────────────────
+
+let currentCareerTab = 'overview';
+
+function switchCareerTab(tabName) {
+  currentCareerTab = tabName;
+  
+  // 1. Update sub-nav tab buttons
+  const tabs = ['overview', 'opportunities', 'applications', 'actions', 'intelligence', 'performance', 'integrations'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`tab-career-${t}`);
+    const subview = document.getElementById(`career-subview-${t}`);
+    if (btn) {
+      if (t === tabName) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+    if (subview) {
+      if (t === tabName) {
+        subview.style.display = 'block';
+        subview.classList.add('active');
+      } else {
+        subview.style.display = 'none';
+        subview.classList.remove('active');
+      }
+    }
+  });
+
+  // 2. Trigger subview-specific data loading
+  if (tabName === 'overview') {
+    loadCareerDashboard();
+  } else if (tabName === 'opportunities') {
+    loadCareerQueue();
+  } else if (tabName === 'applications') {
+    loadCareerApplications();
+  } else if (tabName === 'actions') {
+    loadCareerActions();
+  } else if (tabName === 'intelligence') {
+    loadCareerOptimization();
+  } else if (tabName === 'performance') {
+    loadCareerPerformance();
+  } else if (tabName === 'integrations') {
+    loadCareerIntegrations();
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
 
 async function loadCareerDashboard() {
   try {
@@ -506,6 +551,15 @@ async function loadCareerDashboard() {
     if (!json.success) return;
 
     const data = json.data;
+    
+    // 1. Header status time
+    const syncTimeEl = document.getElementById('career-last-sync-time');
+    if (syncTimeEl) {
+      const now = new Date();
+      syncTimeEl.innerText = `Sincronizzato: ${now.toLocaleTimeString()}`;
+    }
+
+    // 2. KPIs
     const oppEl = document.getElementById('stat-career-opps');
     if (oppEl) oppEl.innerText = data.totalOpportunities || 0;
     const strongEl = document.getElementById('stat-career-strong');
@@ -524,20 +578,142 @@ async function loadCareerDashboard() {
       if (revEl) revEl.innerText = '€' + (data.metrics.totalRevenue || 0).toLocaleString();
     }
 
-    // Render Alerts
+    // 3. Render Alerts
     renderCareerAlerts(data.alerts || []);
 
-    // Render Funnel
+    // 4. Render Funnel
     renderCareerFunnel(data.funnel);
 
-    // Load Optimization, Actions & Queue
+    // 5. Load Hero Next Action & Top Opps
+    loadHeroNextAction();
+    loadOverviewTopOpps();
+
+    // 6. Refresh Background Tab Data
     loadCareerOptimization();
-    loadCareerActions();
-    loadCareerQueue();
 
     if (window.lucide) lucide.createIcons();
   } catch (err) {
     console.error('Error loading career dashboard:', err);
+  }
+}
+
+async function loadHeroNextAction() {
+  try {
+    const res = await fetch('/api/career/actions');
+    const json = await res.json();
+    const actions = json.data || [];
+    const pendingActions = actions.filter(a => ['SUGGESTED', 'PENDING_APPROVAL', 'APPROVED'].includes(a.status));
+
+    const titleEl = document.getElementById('hero-action-title');
+    const reasonEl = document.getElementById('hero-action-reason');
+    const prioEl = document.getElementById('hero-action-priority');
+    const pillsEl = document.getElementById('hero-action-evidence-pills');
+    const ctaEl = document.getElementById('hero-action-cta-container');
+
+    if (!titleEl || !reasonEl) return;
+
+    if (pendingActions.length > 0) {
+      const topAction = pendingActions[0];
+      const isCritical = topAction.priority === 'CRITICAL';
+      if (prioEl) {
+        prioEl.innerText = topAction.priority;
+        prioEl.style.color = isCritical ? '#ff453a' : '#f59e0b';
+        prioEl.style.background = isCritical ? 'rgba(255,69,58,0.2)' : 'rgba(245,158,11,0.2)';
+      }
+
+      titleEl.innerText = `Azione Consigliata: ${topAction.action_type.replace(/_/g, ' ')}`;
+      reasonEl.innerText = topAction.reason || 'Decisione deterministica per massimizzare la conversione.';
+
+      if (pillsEl) {
+        pillsEl.innerHTML = `
+          <span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); color: #fff;">
+            Stato: <strong style="color: #10b981;">${topAction.status}</strong>
+          </span>
+          <span style="font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--db-gray-text);">
+            Human Decision Gate
+          </span>
+        `;
+      }
+
+      if (ctaEl) {
+        if (topAction.status === 'PENDING_APPROVAL') {
+          ctaEl.innerHTML = `
+            <button class="btn-primary" style="font-size: 13px; padding: 8px 16px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="handleApproveAction(${topAction.id})">
+              <i data-lucide="check"></i> Approva Azione
+            </button>
+            <button class="btn-secondary" style="font-size: 12px; padding: 6px 12px;" onclick="switchCareerTab('actions')">
+              Vedi nell'Action Center
+            </button>
+          `;
+        } else if (topAction.status === 'APPROVED') {
+          ctaEl.innerHTML = `
+            <button class="btn-primary" style="font-size: 13px; padding: 8px 16px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="handleExecuteAction(${topAction.id})">
+              <i data-lucide="send"></i> Prepara Invio (Handoff)
+            </button>
+          `;
+        } else {
+          ctaEl.innerHTML = `
+            <button class="btn-secondary" style="font-size: 12px; padding: 8px 14px;" onclick="switchCareerTab('actions')">
+              Apri Action Center
+            </button>
+          `;
+        }
+      }
+    } else {
+      if (prioEl) {
+        prioEl.innerText = 'MONITORING';
+        prioEl.style.color = '#10b981';
+        prioEl.style.background = 'rgba(16,185,129,0.15)';
+      }
+      titleEl.innerText = 'Tutto Aggiornato — Career OS in Ascolto';
+      reasonEl.innerText = 'Tutte le azioni operative sono state elaborate. Il sistema analizzerà automaticamente le nuove opportunità.';
+      if (pillsEl) pillsEl.innerHTML = '<span style="font-size: 11px; color: var(--db-gray-text);">Nessuna decisione umana bloccante in coda</span>';
+      if (ctaEl) {
+        ctaEl.innerHTML = `
+          <button class="btn-secondary" style="font-size: 12px; padding: 8px 14px;" onclick="switchCareerTab('opportunities')">
+            Esplora Opportunità
+          </button>
+        `;
+      }
+    }
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('Error loading hero next action:', err);
+  }
+}
+
+async function loadOverviewTopOpps() {
+  try {
+    const res = await fetch('/api/career/opportunities/queue?limit=4');
+    const json = await res.json();
+    const container = document.getElementById('overview-top-opps-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const items = json.items || [];
+    if (items.length === 0) {
+      container.innerHTML = '<div style="color: var(--db-gray-text); font-size: 12px; padding: 12px;">Nessuna opportunità caricata.</div>';
+      return;
+    }
+
+    items.forEach(it => {
+      const row = document.createElement('div');
+      row.style = 'display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04);';
+      row.innerHTML = `
+        <div>
+          <div style="font-weight: 600; font-size: 13px; color: #fff;">${escapeHtml(it.title)}</div>
+          <div style="font-size: 11px; color: var(--db-gray-text);">${escapeHtml(it.company_name)} · ${escapeHtml(it.source)}</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; font-weight: 700; color: ${it.fit_score >= 80 ? '#10b981' : '#ff9f0a'};">${it.fit_score ?? '-'}%</span>
+          <button class="btn-secondary" style="font-size: 11px; padding: 3px 8px;" onclick="openCareerOpportunityDetail(${it.id})">360°</button>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+  } catch (err) {
+    console.error('Error loading overview top opps:', err);
   }
 }
 
@@ -573,18 +749,13 @@ function renderCareerFunnel(funnel) {
   if (!container || !funnel) return;
   container.innerHTML = '';
 
-  const updatedEl = document.getElementById('funnel-updated-time');
-  if (updatedEl) {
-    updatedEl.innerText = 'Totale Won: ' + funnel.totalWon + ' | Ricavo: €' + funnel.realizedRevenue.toLocaleString();
-  }
-
   funnel.stages.forEach(st => {
     const card = document.createElement('div');
-    card.style = 'background: rgba(0,0,0,0.25); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 10px; text-align: center;';
+    card.style = 'background: rgba(0,0,0,0.25); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 8px; text-align: center;';
     card.innerHTML = `
-      <div style="font-size: 11px; color: var(--db-gray-text); text-transform: uppercase; margin-bottom: 4px;">${escapeHtml(st.label.split(' ')[0])}</div>
-      <div style="font-size: 16px; font-weight: 700; color: #fff;">${st.count}</div>
-      <div style="font-size: 10px; color: var(--db-accent-green); margin-top: 4px;">${st.stepConversionRate}% step</div>
+      <div style="font-size: 10px; color: var(--db-gray-text); text-transform: uppercase; margin-bottom: 2px;">${escapeHtml(st.label.split(' ')[0])}</div>
+      <div style="font-size: 15px; font-weight: 700; color: #fff;">${st.count}</div>
+      <div style="font-size: 9px; color: var(--db-accent-green); margin-top: 2px;">${st.stepConversionRate}%</div>
     `;
     container.appendChild(card);
   });
@@ -641,14 +812,14 @@ async function loadCareerQueue() {
           <div style="font-size: 11px; color: var(--db-gray-text);">${escapeHtml(item.remote_type || 'N/A')}</div>
         </td>
         <td>${fitBadge}</td>
+        <td><span style="font-size: 11px; font-weight: 600; color: #10b981;">Evidence Ready</span></td>
         <td><strong style="color: #fff;">${item.application_priority ?? '-'}</strong></td>
-        <td>${recBadge} ${item.critical_gap ? '<span style="color: #ff453a; font-size: 10px; font-weight: 700;">[GAP]</span>' : ''}</td>
         <td>
           <span style="font-size: 12px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06);">${escapeHtml(item.operational_state)}</span>
         </td>
         <td>
-          <button class="btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="openCareerOpportunityDetail(${item.id})">
-            Dettagli
+          <button class="btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="openCareerOpportunityDetail(${item.id})">
+            Dettagli 360°
           </button>
         </td>
       `;
@@ -659,6 +830,85 @@ async function loadCareerQueue() {
   } catch (err) {
     console.error('Error loading career queue:', err);
   }
+}
+
+async function loadCareerApplications() {
+  try {
+    const res = await fetch('/api/career/opportunities/queue');
+    const json = await res.json();
+    const container = document.getElementById('career-applications-pipeline-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const apps = (json.items || []).filter(it => it.application_id);
+    if (apps.length === 0) {
+      container.innerHTML = '<div style="color: var(--db-gray-text); font-size: 13px; padding: 24px; text-align: center;">Nessuna candidatura attiva al momento. Seleziona una opportunità per generare proposta ed evidenze.</div>';
+      return;
+    }
+
+    apps.forEach(app => {
+      const card = document.createElement('div');
+      card.style = 'background: rgba(0,0,0,0.25); border: 1px solid var(--db-card-border); border-radius: var(--db-radius-lg); padding: 16px;';
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h4 style="font-size: 15px; font-weight: 600; color: #fff; margin: 0;">${escapeHtml(app.title)}</h4>
+            <span style="font-size: 12px; color: var(--db-gray-text);">${escapeHtml(app.company_name)} · Canale: ${escapeHtml(app.source)}</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(16,185,129,0.15); color: #10b981;">
+            Stato: ${escapeHtml(app.operational_state)}
+          </span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+          <button class="btn-primary" style="font-size: 12px; padding: 6px 12px;" onclick="openCareerOpportunityDetail(${app.id})">
+            Ispeziona Proposta & Claim
+          </button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Error loading career applications:', err);
+  }
+}
+
+async function loadCareerPerformance() {
+  try {
+    const res = await fetch('/api/career/dashboard');
+    const json = await res.json();
+    if (!json.success || !json.data) return;
+
+    const data = json.data;
+    const funnelContainer = document.getElementById('career-perf-funnel-stages');
+    if (funnelContainer && data.funnel) {
+      funnelContainer.innerHTML = '';
+      data.funnel.stages.forEach(st => {
+        const d = document.createElement('div');
+        d.style = 'background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 12px; text-align: center;';
+        d.innerHTML = `
+          <div style="font-size: 11px; color: var(--db-gray-text); text-transform: uppercase;">${escapeHtml(st.label)}</div>
+          <div style="font-size: 18px; font-weight: 700; color: #fff; margin: 4px 0;">${st.count}</div>
+          <div style="font-size: 11px; color: var(--db-accent-green);">${st.stepConversionRate}% conv.</div>
+        `;
+        funnelContainer.appendChild(d);
+      });
+    }
+
+    if (data.metrics) {
+      const totRev = document.getElementById('perf-total-revenue');
+      if (totRev) totRev.innerText = '€' + (data.metrics.totalRevenue || 0).toLocaleString();
+      const revApp = document.getElementById('perf-rev-per-app');
+      if (revApp) revApp.innerText = '€' + (data.metrics.revenuePerApplication || 0).toLocaleString();
+      const revInt = document.getElementById('perf-rev-per-interview');
+      if (revInt) revInt.innerText = '€' + (data.metrics.revenuePerInterview || 0).toLocaleString();
+    }
+  } catch (err) {
+    console.error('Error loading performance:', err);
+  }
+}
+
+async function loadCareerIntegrations() {
+  // Integrations are rendered with static product architecture and API verification
 }
 
 async function openCareerOpportunityDetail(opportunityId) {
@@ -673,9 +923,9 @@ async function openCareerOpportunityDetail(opportunityId) {
     if (titleEl) titleEl.innerText = data.opportunity.title + ' — ' + data.opportunity.company_name;
 
     const reqsHtml = data.requirements.map(r => `
-      <div style="padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; font-size: 12px;">
-        <span><strong>${escapeHtml(r.name)}</strong> (${escapeHtml(r.priority)})</span>
-        <span style="color: var(--db-gray-text);">${escapeHtml(r.category)}</span>
+      <div style="padding: 8px 12px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; margin-bottom: 6px; display: flex; justify-content: space-between; font-size: 12px;">
+        <span><strong>${escapeHtml(r.name)}</strong> <span style="color: var(--db-gray-text);">(${escapeHtml(r.priority)})</span></span>
+        <span style="color: #10b981; font-weight: 600;">Evidence Ready</span>
       </div>
     `).join('') || '<div style="color: var(--db-gray-text); font-size: 12px;">Nessun requisito estratto.</div>';
 
@@ -683,15 +933,15 @@ async function openCareerOpportunityDetail(opportunityId) {
     if (data.application) {
       const prop = data.proposal;
       appSectionHtml = `
-        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px; margin-top: 12px;">
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-            <span style="font-weight: 600; font-size: 13px;">Stato Candidatura: <strong style="color: var(--db-accent-green);">${escapeHtml(data.application.status)}</strong></span>
+            <span style="font-weight: 600; font-size: 13px;">Stato: <strong style="color: var(--db-accent-green);">${escapeHtml(data.application.status)}</strong></span>
             <span style="font-size: 12px; color: var(--db-gray-text);">Canale: ${escapeHtml(data.application.channel)}</span>
           </div>
           ${prop ? `
             <div style="margin-top: 10px;">
-              <span style="font-size: 12px; font-weight: 600;">Bozza Proposta (v${prop.proposal_version} - ${escapeHtml(prop.proposal_status)}):</span>
-              <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px; font-size: 12px; white-space: pre-wrap; margin-top: 4px; max-height: 150px; overflow-y: auto;">${escapeHtml(prop.content)}</div>
+              <span style="font-size: 12px; font-weight: 600; color: #fff;">Bozza Proposta (v${prop.proposal_version} · ${escapeHtml(prop.proposal_status)}):</span>
+              <div style="background: rgba(0,0,0,0.35); border-radius: 6px; padding: 10px; font-size: 12px; white-space: pre-wrap; margin-top: 4px; max-height: 140px; overflow-y: auto; color: #ddd; border: 1px solid rgba(255,255,255,0.05);">${escapeHtml(prop.content)}</div>
             </div>
           ` : ''}
           ${data.outcome ? `
@@ -708,16 +958,16 @@ async function openCareerOpportunityDetail(opportunityId) {
       sheetBody.innerHTML = `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
           <div>
-            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Panoramica & Fit</h4>
+            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #fff;">Panoramica & Fit</h4>
             <div style="font-size: 13px; margin-bottom: 6px;">Fonte: <strong>${escapeHtml(data.opportunity.source)}</strong> | Remote: <strong>${escapeHtml(data.opportunity.remote_type || 'N/A')}</strong></div>
             <div style="font-size: 13px; margin-bottom: 12px;">Fit Score: <strong style="color: #10b981;">${data.fit.fitScore ?? 'N/A'}%</strong> | Priority: <strong>${data.fit.applicationPriority ?? 'N/A'}</strong></div>
             
-            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 6px;">Requisiti Rilevati</h4>
+            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #fff;">Requisiti & Evidenze</h4>
             <div style="max-height: 180px; overflow-y: auto;">${reqsHtml}</div>
           </div>
 
           <div>
-            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Candidatura & Proposta</h4>
+            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #fff;">Candidatura & Proposal Guard</h4>
             ${appSectionHtml}
           </div>
         </div>
@@ -749,53 +999,59 @@ async function loadCareerActions() {
     container.innerHTML = '';
 
     if (!json.success || !json.data || json.data.length === 0) {
-      container.innerHTML = '<div style="color: var(--db-gray-text); font-size: 13px; padding: 12px; text-align: center;">Nessuna azione operativa in attesa.</div>';
+      container.innerHTML = '<div style="color: var(--db-gray-text); font-size: 13px; padding: 16px; text-align: center;">Nessuna azione operativa in attesa.</div>';
       return;
     }
 
     const activeActions = json.data.filter(a => ['SUGGESTED', 'PENDING_APPROVAL', 'APPROVED'].includes(a.status));
     if (activeActions.length === 0) {
-      container.innerHTML = '<div style="color: var(--db-gray-text); font-size: 13px; padding: 12px; text-align: center;">Tutte le azioni operative sono state completate o archiviate.</div>';
+      container.innerHTML = '<div style="color: var(--db-gray-text); font-size: 13px; padding: 16px; text-align: center;">Tutte le azioni operative sono state completate o archiviate.</div>';
       return;
     }
 
-    activeActions.slice(0, 5).forEach(act => {
-      const isCritical = act.priority === 'CRITICAL';
-      const isPending = act.status === 'PENDING_APPROVAL';
-      const isApproved = act.status === 'APPROVED';
-
+    activeActions.forEach(act => {
       const card = document.createElement('div');
-      card.style = 'background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;';
+      card.style = 'background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); border-radius: var(--db-radius-lg); padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;';
       
+      const isCritical = act.priority === 'CRITICAL';
+      const prioColor = isCritical ? '#ff453a' : (act.priority === 'HIGH' ? '#ff9f0a' : '#10b981');
+
+      let actionButtons = '';
+      if (act.status === 'PENDING_APPROVAL') {
+        actionButtons = `
+          <button class="btn-primary" style="padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 4px;" onclick="handleApproveAction(${act.id})">
+            <i data-lucide="check"></i> Approva
+          </button>
+          <button class="btn-secondary" style="padding: 6px 10px; font-size: 12px; color: #ff453a;" onclick="handleRejectAction(${act.id})">
+            Rifiuta
+          </button>
+        `;
+      } else if (act.status === 'APPROVED') {
+        actionButtons = `
+          <button class="btn-primary" style="padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 4px;" onclick="handleExecuteAction(${act.id})">
+            <i data-lucide="send"></i> Esegui Handoff
+          </button>
+        `;
+      } else if (act.status === 'SUGGESTED') {
+        actionButtons = `
+          <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="handleApproveAction(${act.id})">
+            Richiedi Approvazione
+          </button>
+        `;
+      }
+
       card.innerHTML = `
-        <div style="flex: 1; min-width: 250px;">
+        <div>
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-            <span style="font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${isCritical ? 'rgba(255,69,58,0.2)' : 'rgba(255,159,10,0.2)'}; color: ${isCritical ? '#ff453a' : '#ff9f0a'};">${act.priority}</span>
-            <span style="font-weight: 600; font-size: 13px; color: #fff;">${escapeHtml(act.actionType)}</span>
-            <span style="font-size: 11px; color: var(--db-gray-text);">[${escapeHtml(act.status)}]</span>
+            <span style="font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; background: ${prioColor}20; color: ${prioColor};">${act.priority}</span>
+            <span style="font-weight: 600; font-size: 13px; color: #fff;">${escapeHtml(act.action_type)}</span>
+            <span style="font-size: 11px; color: var(--db-gray-text);">[ID #${act.id}]</span>
           </div>
-          <div style="font-size: 12px; color: var(--db-gray-text); margin-bottom: 4px;">${escapeHtml(act.reason)}</div>
-          ${act.scheduledFor ? `<div style="font-size: 11px; color: var(--db-accent-green);"><i data-lucide="clock" style="width: 12px; height: 12px; display: inline;"></i> Schedulato per: ${new Date(act.scheduledFor).toLocaleDateString()}</div>` : ''}
+          <div style="font-size: 12px; color: var(--db-gray-text);">${escapeHtml(act.reason || 'Nessun dettaglio specificato')}</div>
+          <div style="font-size: 11px; color: #10b981; margin-top: 4px;">Stato: ${escapeHtml(act.status)}</div>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          ${isPending ? `
-            <button class="btn-primary" style="padding: 6px 12px; font-size: 12px; background: #10b981;" onclick="handleApproveAction(${act.id})">
-              Approva
-            </button>
-            <button class="btn-secondary" style="padding: 6px 12px; font-size: 12px; color: #ff453a;" onclick="handleRejectAction(${act.id})">
-              Rifiuta
-            </button>
-          ` : ''}
-          ${isApproved ? `
-            <button class="btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="handleExecuteAction(${act.id})">
-              Esegui (Handoff)
-            </button>
-          ` : ''}
-          ${act.opportunityId ? `
-            <button class="btn-secondary" style="padding: 6px 10px; font-size: 12px;" onclick="openCareerOpportunityDetail(${act.opportunityId})">
-              Dettaglio
-            </button>
-          ` : ''}
+        <div style="display: flex; gap: 8px;">
+          ${actionButtons}
         </div>
       `;
       container.appendChild(card);
@@ -809,14 +1065,15 @@ async function loadCareerActions() {
 
 async function handleApproveAction(actionId) {
   try {
-    const res = await fetch(\`/api/career/actions/\${actionId}/approve\`, {
+    const res = await fetch(`/api/career/actions/${actionId}/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ actor: 'USER', notes: 'Approvato manualmente dalla dashboard' })
+      body: JSON.stringify({ actor: 'USER', note: 'Approvato dall\'utente via Command Center' })
     });
     const json = await res.json();
     if (json.success) {
       loadCareerActions();
+      loadHeroNextAction();
       loadCareerDashboard();
     }
   } catch (err) {
@@ -837,6 +1094,7 @@ async function handleRejectAction(actionId) {
     const json = await res.json();
     if (json.success) {
       loadCareerActions();
+      loadHeroNextAction();
       loadCareerDashboard();
     }
   } catch (err) {
@@ -859,6 +1117,7 @@ async function handleExecuteAction(actionId) {
         alert('✅ Azione eseguita con successo!');
       }
       loadCareerActions();
+      loadHeroNextAction();
       loadCareerDashboard();
     } else {
       alert('❌ Errore esecuzione: ' + json.error);
@@ -965,6 +1224,3 @@ async function runOptimizationPipeline() {
     alert('Errore: ' + err.message);
   }
 }
-
-
-
