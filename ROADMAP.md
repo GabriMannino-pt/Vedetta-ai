@@ -1,7 +1,7 @@
 # 🗺️ VEDETTA 1.1 — REVENUE OS & SALES MANAGER ROADMAP
 
 ## 🎯 CURRENT MISSION: €0 CASH → PRIMO CLIENTE PAGANTE (V1.2 Revenue Validation)
-* **Regola Aurea:** 1 solo progetto attivo (**Vedetta**), max 1-2 task in progress. STOP alle nuove feature.
+* **Regola Aurea:** 1 solo progetto attivo (**Vedetta**), max 1-2 task in progress. STOP alle nuove feature non necessarie alla vendita.
 * **Metric Baseline (31/08/2026):** 97 email inviate · 78 aziende contattate · €260.264 pipeline · **€0 Cash Collected**
 * **GitHub Board Live:** https://github.com/users/GabriMannino-pt/projects/2
 
@@ -34,7 +34,7 @@
 ## 🎯 MILESTONE 4 — Inbound Response Handling & Demo Conversion (IN CORSO 🚀)
 - [ ] **VED-030** Monitoraggio risposte Gmail (Finestra 31 Agosto – 3 Settembre)
 - [ ] **VED-031** AI Reply Intelligence & Objections Classification
-- [ ] **VED-032** Fissaggio prime Demo Google Meet (< 2h dalla risposta positiva)
+- [ ] **VED-032** Fissaggio prime Demo Google Meet (<2h dalla risposta positiva)
 - [ ] **VED-033** Diagnosi Statistica Aperture / Risposte al 3 Settembre
 - [ ] **VED-101** Revenue Truth: Funnel Comparativo e Metriche per Prodotto
 
@@ -47,15 +47,33 @@
 
 ---
 
-## 🦅 MILESTONE 6 — Career Intelligence OS (CAREER-001) (IN CORSO 🚀)
+## 🦅 MILESTONE 6 — Career Intelligence OS (CAREER-001) (CORE IMPLEMENTATO — FROZEN 🔒)
 - [x] **CAREER-001.1** Career Profile, Skills & Evidence Registry Foundation (SQLite + Validations)
 - [x] **CAREER-001.2** Universal Opportunity Core & Persistence Foundation (Deduplication + Normalizer)
 - [x] **CAREER-001.3** Opportunity Intelligence & Semantic Requirement Extraction (Gemini + Evidence Guard)
 - [x] **CAREER-001.4** Deterministic Fit Scoring Engine & Profile Matcher
 - [x] **CAREER-001.5** Evidence Matcher & Verification Engine
-- [x] **CAREER-001.6** Priority & Expected Value Scorer (Outcome Tracking, Learning & Feedback Loop)
+- [x] **CAREER-001.6** Outcome Tracking, Learning & Feedback Loop
 - [x] **CAREER-001.7** Career Intelligence Dashboard & Operational Workflow
 - [x] **CAREER-001.8** Career Execution Engine & Human-in-the-Loop Automation
 - [x] **CAREER-001.9** Adaptive Career Optimization & Strategy Intelligence
 - [x] **CAREER-002.1** Career OS Command Center & Product-Grade UX (COMPLETE 🟢 — Core Frozen)
 - [ ] **CAREER-002.0** Career External Integrations Layer (Upwork & LinkedIn — Future Project)
+
+---
+
+## 🚀 MILESTONE 7 — VEDDETTA COMMERCIALIZATION (CURRENT)
+**Mission:** trasformare Vedetta da software interno funzionante in un prodotto acquistabile, dimostrabile e vendibile, senza destabilizzare il Sales Core o il Career OS.
+
+- [ ] **VED-050** Commercialization MVP — Sell Vedetta ([Issue #23](https://github.com/GabriMannino-pt/Vedetta-ai/issues/23))
+  - [ ] Product positioning & messaging
+  - [ ] Public landing / commercial entry point
+  - [ ] Demo / trial flow
+  - [ ] Signup & onboarding foundation
+  - [ ] Pricing presentation & commercial CTA
+  - [ ] Lead capture + activation analytics
+  - [ ] Sales Core regression protection
+  - [ ] Career OS isolation / preserved availability
+  - [ ] No fake integrations, revenue, AI actions or submissions
+
+**Commercial freeze:** nuove feature non direttamente legate a vendita, attivazione o retention restano fuori scope fino al primo cliente pagante.
