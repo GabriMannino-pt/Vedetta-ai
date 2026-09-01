@@ -46,12 +46,17 @@ function switchSidebarView(viewName) {
   const titles = {
     overview: 'Overview',
     leads: 'Qualified Leads Pipeline',
+    career: 'Career Intelligence OS',
     settings: 'Settings'
   };
   document.getElementById('page-title').innerText = titles[viewName] || 'Dashboard';
 
   // Rinfresca i dati
-  refreshLeads();
+  if (viewName === 'career') {
+    loadCareerDashboard();
+  } else {
+    refreshLeads();
+  }
 }
 
 // Deseleziona il lead attivo dal pannello destro
@@ -489,3 +494,243 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// ─────────────────────────────────────────────────────────────
+// 🦅 CAREER INTELLIGENCE OS JAVASCRIPT LAYER
+// ─────────────────────────────────────────────────────────────
+
+async function loadCareerDashboard() {
+  try {
+    const res = await fetch('/api/career/dashboard');
+    const json = await res.json();
+    if (!json.success) return;
+
+    const data = json.data;
+    const oppEl = document.getElementById('stat-career-opps');
+    if (oppEl) oppEl.innerText = data.totalOpportunities || 0;
+    const strongEl = document.getElementById('stat-career-strong');
+    if (strongEl) strongEl.innerText = data.strongMatchesCount || 0;
+    const appsEl = document.getElementById('stat-career-apps');
+    if (appsEl) appsEl.innerText = data.applicationsCount || 0;
+    
+    if (data.metrics) {
+      const respEl = document.getElementById('stat-career-response-rate');
+      if (respEl) respEl.innerText = (data.metrics.responseRate || 0) + '%';
+      const intEl = document.getElementById('stat-career-interview-rate');
+      if (intEl) intEl.innerText = (data.metrics.interviewRate || 0) + '%';
+      const winEl = document.getElementById('stat-career-win-rate');
+      if (winEl) winEl.innerText = (data.metrics.winRate || 0) + '%';
+      const revEl = document.getElementById('stat-career-revenue');
+      if (revEl) revEl.innerText = '€' + (data.metrics.totalRevenue || 0).toLocaleString();
+    }
+
+    // Render Alerts
+    renderCareerAlerts(data.alerts || []);
+
+    // Render Funnel
+    renderCareerFunnel(data.funnel);
+
+    // Load Queue
+    loadCareerQueue();
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('Error loading career dashboard:', err);
+  }
+}
+
+function renderCareerAlerts(alerts) {
+  const container = document.getElementById('career-alerts-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (alerts.length === 0) return;
+
+  alerts.slice(0, 3).forEach(a => {
+    const isCrit = a.severity === 'CRITICAL';
+    const isWarn = a.severity === 'WARNING';
+    const bg = isCrit ? 'rgba(255, 69, 58, 0.15)' : (isWarn ? 'rgba(255, 159, 10, 0.15)' : 'rgba(10, 132, 255, 0.15)');
+    const border = isCrit ? 'rgba(255, 69, 58, 0.3)' : (isWarn ? 'rgba(255, 159, 10, 0.3)' : 'rgba(10, 132, 255, 0.3)');
+    const color = isCrit ? '#ff453a' : (isWarn ? '#ff9f0a' : '#0A84FF');
+
+    const div = document.createElement('div');
+    div.style = `padding: 10px 16px; border-radius: 8px; background: ${bg}; border: 1px solid ${border}; display: flex; align-items: center; justify-content: space-between;`;
+    div.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="color: ${color}; font-weight: 700; font-size: 13px;">[${a.severity}]</span>
+        <span style="font-size: 13px; font-weight: 600; color: #fff;">${escapeHtml(a.title)}:</span>
+        <span style="font-size: 13px; color: var(--db-gray-text);">${escapeHtml(a.description)}</span>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function renderCareerFunnel(funnel) {
+  const container = document.getElementById('career-funnel-stages');
+  if (!container || !funnel) return;
+  container.innerHTML = '';
+
+  const updatedEl = document.getElementById('funnel-updated-time');
+  if (updatedEl) {
+    updatedEl.innerText = 'Totale Won: ' + funnel.totalWon + ' | Ricavo: €' + funnel.realizedRevenue.toLocaleString();
+  }
+
+  funnel.stages.forEach(st => {
+    const card = document.createElement('div');
+    card.style = 'background: rgba(0,0,0,0.25); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 10px; text-align: center;';
+    card.innerHTML = `
+      <div style="font-size: 11px; color: var(--db-gray-text); text-transform: uppercase; margin-bottom: 4px;">${escapeHtml(st.label.split(' ')[0])}</div>
+      <div style="font-size: 16px; font-weight: 700; color: #fff;">${st.count}</div>
+      <div style="font-size: 10px; color: var(--db-accent-green); margin-top: 4px;">${st.stepConversionRate}% step</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function loadCareerQueue() {
+  try {
+    const search = document.getElementById('career-search')?.value || '';
+    const rec = document.getElementById('career-filter-rec')?.value || '';
+    const status = document.getElementById('career-filter-status')?.value || '';
+
+    let url = `/api/career/opportunities/queue?search=${encodeURIComponent(search)}`;
+    if (rec) url += `&recommendation=${encodeURIComponent(rec)}`;
+    if (status === 'READY') url += '&applicationStatus=READY';
+    else if (status === 'SUBMITTED') url += '&applicationStatus=SUBMITTED';
+    else if (status === 'ANALYZED') url += '&analysisStatus=ANALYZED';
+
+    const res = await fetch(url);
+    const json = await res.json();
+    const tbody = document.getElementById('career-queue-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (!json.items || json.items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--db-gray-text); padding: 24px;">Nessuna opportunità trovata.</td></tr>';
+      return;
+    }
+
+    json.items.forEach(item => {
+      const tr = document.createElement('tr');
+      
+      const fitBadge = item.fit_score !== null 
+        ? `<span style="padding: 3px 8px; border-radius: 12px; font-weight: 700; font-size: 12px; background: ${item.fit_score >= 80 ? 'rgba(16,185,129,0.2)' : 'rgba(255,159,10,0.2)'}; color: ${item.fit_score >= 80 ? '#10b981' : '#ff9f0a'};">${item.fit_score}%</span>`
+        : '<span style="color: var(--db-gray-text);">-</span>';
+
+      const recColors = {
+        STRONG_MATCH: '#10b981',
+        GOOD_MATCH: '#34d399',
+        POSSIBLE_MATCH: '#ff9f0a',
+        LOW_PRIORITY: '#9ca3af'
+      };
+
+      const recBadge = item.fit_recommendation 
+        ? `<span style="font-size: 11px; font-weight: 600; color: ${recColors[item.fit_recommendation] || '#fff'};">${item.fit_recommendation}</span>`
+        : '-';
+
+      tr.innerHTML = `
+        <td>
+          <div style="font-weight: 600; color: #fff;">${escapeHtml(item.title)}</div>
+          <div style="font-size: 12px; color: var(--db-gray-text);">${escapeHtml(item.company_name)}</div>
+        </td>
+        <td>
+          <div style="font-size: 12px;">${escapeHtml(item.source)}</div>
+          <div style="font-size: 11px; color: var(--db-gray-text);">${escapeHtml(item.remote_type || 'N/A')}</div>
+        </td>
+        <td>${fitBadge}</td>
+        <td><strong style="color: #fff;">${item.application_priority ?? '-'}</strong></td>
+        <td>${recBadge} ${item.critical_gap ? '<span style="color: #ff453a; font-size: 10px; font-weight: 700;">[GAP]</span>' : ''}</td>
+        <td>
+          <span style="font-size: 12px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.06);">${escapeHtml(item.operational_state)}</span>
+        </td>
+        <td>
+          <button class="btn-secondary" style="padding: 4px 8px; font-size: 12px;" onclick="openCareerOpportunityDetail(${item.id})">
+            Dettagli
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error('Error loading career queue:', err);
+  }
+}
+
+async function openCareerOpportunityDetail(opportunityId) {
+  try {
+    const res = await fetch(`/api/career/opportunities/${opportunityId}/intelligence`);
+    const json = await res.json();
+    if (!json.success) return;
+
+    const data = json.data;
+    const sheetBody = document.getElementById('career-sheet-body');
+    const titleEl = document.getElementById('career-sheet-title');
+    if (titleEl) titleEl.innerText = data.opportunity.title + ' — ' + data.opportunity.company_name;
+
+    const reqsHtml = data.requirements.map(r => `
+      <div style="padding: 6px 10px; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; font-size: 12px;">
+        <span><strong>${escapeHtml(r.name)}</strong> (${escapeHtml(r.priority)})</span>
+        <span style="color: var(--db-gray-text);">${escapeHtml(r.category)}</span>
+      </div>
+    `).join('') || '<div style="color: var(--db-gray-text); font-size: 12px;">Nessun requisito estratto.</div>';
+
+    let appSectionHtml = '<div style="color: var(--db-gray-text); font-size: 13px;">Nessuna candidatura creata per questa opportunità.</div>';
+    if (data.application) {
+      const prop = data.proposal;
+      appSectionHtml = `
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--db-card-border); border-radius: 8px; padding: 14px; margin-top: 12px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-weight: 600; font-size: 13px;">Stato Candidatura: <strong style="color: var(--db-accent-green);">${escapeHtml(data.application.status)}</strong></span>
+            <span style="font-size: 12px; color: var(--db-gray-text);">Canale: ${escapeHtml(data.application.channel)}</span>
+          </div>
+          ${prop ? `
+            <div style="margin-top: 10px;">
+              <span style="font-size: 12px; font-weight: 600;">Bozza Proposta (v${prop.proposal_version} - ${escapeHtml(prop.proposal_status)}):</span>
+              <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 10px; font-size: 12px; white-space: pre-wrap; margin-top: 4px; max-height: 150px; overflow-y: auto;">${escapeHtml(prop.content)}</div>
+            </div>
+          ` : ''}
+          ${data.outcome ? `
+            <div style="margin-top: 10px; font-size: 12px; border-top: 1px solid var(--db-card-border); padding-top: 8px;">
+              <span>Ultimo Esito: <strong>${escapeHtml(data.outcome.finalOutcome)}</strong></span> |
+              <span>Revenue: <strong>€${(data.outcome.revenue || 0).toLocaleString()}</strong></span>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    if (sheetBody) {
+      sheetBody.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div>
+            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Panoramica & Fit</h4>
+            <div style="font-size: 13px; margin-bottom: 6px;">Fonte: <strong>${escapeHtml(data.opportunity.source)}</strong> | Remote: <strong>${escapeHtml(data.opportunity.remote_type || 'N/A')}</strong></div>
+            <div style="font-size: 13px; margin-bottom: 12px;">Fit Score: <strong style="color: #10b981;">${data.fit.fitScore ?? 'N/A'}%</strong> | Priority: <strong>${data.fit.applicationPriority ?? 'N/A'}</strong></div>
+            
+            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 6px;">Requisiti Rilevati</h4>
+            <div style="max-height: 180px; overflow-y: auto;">${reqsHtml}</div>
+          </div>
+
+          <div>
+            <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">Candidatura & Proposta</h4>
+            ${appSectionHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('career-sheet-overlay')?.classList.add('active');
+    document.getElementById('career-sheet')?.classList.add('active');
+  } catch (err) {
+    console.error('Error opening opportunity detail:', err);
+  }
+}
+
+function closeCareerSheet() {
+  document.getElementById('career-sheet-overlay')?.classList.remove('active');
+  document.getElementById('career-sheet')?.classList.remove('active');
+}
+

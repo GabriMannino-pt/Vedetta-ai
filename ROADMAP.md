@@ -54,5 +54,6 @@
 - [x] **CAREER-001.4** Deterministic Fit Scoring Engine & Profile Matcher
 - [x] **CAREER-001.5** Evidence Matcher & Verification Engine
 - [x] **CAREER-001.6** Priority & Expected Value Scorer (Outcome Tracking, Learning & Feedback Loop)
-- [ ] **CAREER-001.7** LinkedIn Integration Layer
-- [ ] **CAREER-001.8** Upwork Integration Layer
+- [x] **CAREER-001.7** Career Intelligence Dashboard & Operational Workflow
+- [ ] **CAREER-001.8** LinkedIn Integration Layer
+- [ ] **CAREER-001.9** Upwork Integration Layer

@@ -806,6 +806,101 @@ app.post('/api/career/learning/rebuild', (req, res) => {
   }
 });
 
+// 23. GET /api/career/dashboard
+app.get('/api/career/dashboard', (req, res) => {
+  try {
+    const { getCareerDashboard } = require('./career/careerDashboard');
+    const dashboard = getCareerDashboard();
+    res.json({ success: true, data: dashboard });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 24. GET /api/career/opportunities/queue
+app.get('/api/career/opportunities/queue', (req, res) => {
+  try {
+    const { getOpportunityQueue } = require('./career/careerDashboard');
+    const filters: any = {};
+    if (req.query.minFitScore) filters.minFitScore = parseFloat(req.query.minFitScore as string);
+    if (req.query.maxFitScore) filters.maxFitScore = parseFloat(req.query.maxFitScore as string);
+    if (req.query.recommendation) filters.recommendation = req.query.recommendation as string;
+    if (req.query.priorityMin) filters.priorityMin = parseFloat(req.query.priorityMin as string);
+    if (req.query.source) filters.source = req.query.source as string;
+    if (req.query.remoteType) filters.remoteType = req.query.remoteType as string;
+    if (req.query.seniority) filters.seniority = req.query.seniority as string;
+    if (req.query.analysisStatus) filters.analysisStatus = req.query.analysisStatus as string;
+    if (req.query.applicationStatus) filters.applicationStatus = req.query.applicationStatus as string;
+    if (req.query.criticalGap !== undefined) filters.criticalGap = req.query.criticalGap === 'true';
+    if (req.query.search) filters.search = req.query.search as string;
+
+    const sort: any = {
+      field: (req.query.sort as any) || 'priority',
+      order: (req.query.order as any) || 'DESC'
+    };
+
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+
+    const result = getOpportunityQueue(filters, sort, page, limit);
+    res.json({ success: true, ...result });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 25. GET /api/career/opportunities/:id/intelligence
+app.get('/api/career/opportunities/:id/intelligence', (req, res) => {
+  try {
+    const { getOpportunityDetail } = require('./career/careerDashboard');
+    const id = parseInt(req.params.id, 10);
+    const detail = getOpportunityDetail(id);
+    if (!detail) {
+      return res.status(404).json({ error: 'Opportunity not found' });
+    }
+    res.json({ success: true, data: detail });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 26. GET /api/career/applications/:id/detail
+app.get('/api/career/applications/:id/detail', (req, res) => {
+  try {
+    const { getApplicationDetail } = require('./career/careerDashboard');
+    const id = parseInt(req.params.id, 10);
+    const detail = getApplicationDetail(id);
+    if (!detail) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+    res.json({ success: true, data: detail });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 27. GET /api/career/funnel
+app.get('/api/career/funnel', (req, res) => {
+  try {
+    const { calculateCareerFunnel } = require('./career/careerFunnel');
+    const funnel = calculateCareerFunnel();
+    res.json({ success: true, data: funnel });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 28. GET /api/career/alerts
+app.get('/api/career/alerts', (req, res) => {
+  try {
+    const { generateCareerAlerts } = require('./career/careerAlerts');
+    const alerts = generateCareerAlerts();
+    res.json({ success: true, count: alerts.length, data: alerts });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. File Statici: Serviamo la Dashboard Web (HTML/JS)
 app.use(express.static(path.join(__dirname, '..', 'src', 'public')));
 

@@ -19,3 +19,6 @@ export * from './applicationIntelligence';
 export * from './careerOutcomes';
 export * from './revenueOutcomeAdapter';
 export * from './learningEngine';
+export * from './careerFunnel';
+export * from './careerAlerts';
+export * from './careerDashboard';

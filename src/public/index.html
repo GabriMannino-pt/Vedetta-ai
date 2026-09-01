@@ -27,6 +27,10 @@
         <i data-lucide="check-square"></i>
         <span>Qualified Leads</span>
       </button>
+      <button class="menu-item" id="menu-career" onclick="switchSidebarView('career')">
+        <i data-lucide="briefcase"></i>
+        <span>Career OS</span>
+      </button>
       <button class="menu-item" id="menu-settings" onclick="switchSidebarView('settings')">
         <i data-lucide="settings"></i>
         <span>Settings</span>
@@ -281,6 +285,106 @@
       </div>
     </div>
 
+    <!-- VIEW 4: CAREER INTELLIGENCE OS -->
+    <div id="view-career" class="view-section">
+      
+      <!-- Career KPI Grid -->
+      <section class="stats-container" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));">
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Opportunità Totali</span><i data-lucide="compass" class="stat-menu-icon"></i></div>
+          <div class="stat-value-group"><span class="stat-value" id="stat-career-opps">0</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Strong Matches (Fit ≥ 70)</span><i data-lucide="sparkles" class="stat-menu-icon"></i></div>
+          <div class="stat-value-group"><span class="stat-value" id="stat-career-strong">0</span><span class="stat-change-badge">High Value</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Candidature Attive</span><i data-lucide="send" class="stat-menu-icon"></i></div>
+          <div class="stat-value-group"><span class="stat-value" id="stat-career-apps">0</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Response Rate</span><i data-lucide="message-square" class="stat-menu-icon"></i></div>
+          <div class="stat-value-group"><span class="stat-value" id="stat-career-response-rate">0%</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Interview Rate</span><i data-lucide="calendar" class="stat-menu-icon"></i></div>
+          <div class="stat-value-group"><span class="stat-value" id="stat-career-interview-rate">0%</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Win Rate</span><i data-lucide="trophy" class="stat-menu-icon"></i></div>
+          <div class="stat-value-group"><span class="stat-value" id="stat-career-win-rate">0%</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Realized Revenue</span><i data-lucide="dollar-sign" class="stat-menu-icon"></i></div>
+          <div class="stat-value-group"><span class="stat-value" id="stat-career-revenue">€0</span><span class="stat-change-badge">Confirmed</span></div>
+        </div>
+      </section>
+
+      <!-- Alert Banner -->
+      <div id="career-alerts-container" style="margin-bottom: 24px; display: flex; flex-direction: column; gap: 8px;"></div>
+
+      <!-- Career Funnel Stage Flow -->
+      <div class="card-section" style="margin-bottom: 24px; background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="filter"></i> Career Intelligence Conversion Funnel
+          </h3>
+          <span style="font-size: 12px; color: var(--db-gray-text);" id="funnel-updated-time"></span>
+        </div>
+        <div id="career-funnel-stages" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)); gap: 8px;"></div>
+      </div>
+
+      <!-- Opportunity Queue Table & Controls -->
+      <div class="table-card" style="background: var(--db-card-bg); border-radius: var(--db-radius-lg); padding: 20px; border: 1px solid var(--db-card-border);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600;">Opportunity Queue (Operational Workflow)</h3>
+            <span style="font-size: 12px; color: var(--db-gray-text);">Classificazione, Fit Scoring, Strategia e Tracciamento Esiti</span>
+          </div>
+          
+          <!-- Filters Toolbar -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="text" id="career-search" placeholder="Cerca ruolo o azienda..." style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px;" oninput="loadCareerQueue()">
+            <select id="career-filter-rec" style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px;" onchange="loadCareerQueue()">
+              <option value="">Tutte le Raccomandazioni</option>
+              <option value="STRONG_MATCH">Strong Match</option>
+              <option value="GOOD_MATCH">Good Match</option>
+              <option value="POSSIBLE_MATCH">Possible Match</option>
+              <option value="LOW_PRIORITY">Low Priority</option>
+            </select>
+            <select id="career-filter-status" style="background: rgba(0,0,0,0.3); border: 1px solid var(--db-card-border); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px;" onchange="loadCareerQueue()">
+              <option value="">Tutti gli Stati</option>
+              <option value="NEW">Nuove</option>
+              <option value="ANALYZED">Analizzate</option>
+              <option value="READY">Pronte per Invio</option>
+              <option value="SUBMITTED">Inviate</option>
+            </select>
+            <button class="btn-secondary" onclick="loadCareerDashboard()" style="padding: 6px 12px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="refresh-cw"></i> Aggiorna
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="leads-table">
+            <thead>
+              <tr>
+                <th>Ruolo & Azienda</th>
+                <th>Fonte / Remote</th>
+                <th>Fit Score</th>
+                <th>Priority</th>
+                <th>Raccomandazione</th>
+                <th>Stato Operativo</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="career-queue-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
     <!-- VIEW 3: SETTINGS -->
     <div id="view-settings" class="view-section">
       <div class="settings-container">
@@ -412,6 +516,19 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- CAREER OPPORTUNITY DETAIL MODAL -->
+  <div id="career-sheet-overlay" class="sheet-overlay" onclick="closeCareerSheet()"></div>
+  <div id="career-sheet" class="ios-sheet" style="max-width: 900px;">
+    <div class="sheet-handle" onclick="closeCareerSheet()"></div>
+    <div class="sheet-header">
+      <h2 id="career-sheet-title">Dettaglio Opportunità</h2>
+      <button class="btn-close-sheet" onclick="closeCareerSheet()">Chiudi</button>
+    </div>
+    <div class="sheet-body" id="career-sheet-body" style="padding: 20px;">
+      <!-- Content populated dynamically -->
     </div>
   </div>
 
