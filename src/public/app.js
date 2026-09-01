@@ -530,7 +530,8 @@ async function loadCareerDashboard() {
     // Render Funnel
     renderCareerFunnel(data.funnel);
 
-    // Load Actions & Queue
+    // Load Optimization, Actions & Queue
+    loadCareerOptimization();
     loadCareerActions();
     loadCareerQueue();
 
@@ -819,7 +820,7 @@ async function handleApproveAction(actionId) {
       loadCareerDashboard();
     }
   } catch (err) {
-    alert('Errore durante l\\'approvazione dell\\'azione: ' + err.message);
+    alert('Errore durante l\'approvazione dell\'azione: ' + err.message);
   }
 }
 
@@ -828,10 +829,10 @@ async function handleRejectAction(actionId) {
   if (reason === null) return;
 
   try {
-    const res = await fetch(\`/api/career/actions/\${actionId}/reject\`, {
+    const res = await fetch(`/api/career/actions/${actionId}/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ actor: 'USER', reason: reason || 'Rifiutato dall\\'utente' })
+      body: JSON.stringify({ actor: 'USER', reason: reason || 'Rifiutato dall\'utente' })
     });
     const json = await res.json();
     if (json.success) {
@@ -839,13 +840,13 @@ async function handleRejectAction(actionId) {
       loadCareerDashboard();
     }
   } catch (err) {
-    alert('Errore durante il rifiuto dell\\'azione: ' + err.message);
+    alert('Errore durante il rifiuto dell\'azione: ' + err.message);
   }
 }
 
 async function handleExecuteAction(actionId) {
   try {
-    const res = await fetch(\`/api/career/actions/\${actionId}/execute\`, {
+    const res = await fetch(`/api/career/actions/${actionId}/execute`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ actor: 'USER' })
@@ -853,7 +854,7 @@ async function handleExecuteAction(actionId) {
     const json = await res.json();
     if (json.success) {
       if (json.mode === 'HUMAN_HANDOFF') {
-        alert('✅ Pacchetto preparato per l\\'invio manuale:\\n\\n' + (json.payload?.instructions || json.message));
+        alert('✅ Pacchetto preparato per l\'invio manuale:\n\n' + (json.payload?.instructions || json.message));
       } else {
         alert('✅ Azione eseguita con successo!');
       }
@@ -866,5 +867,104 @@ async function handleExecuteAction(actionId) {
     alert('Errore esecuzione: ' + err.message);
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// 📈 CAREER OPTIMIZATION & ADAPTIVE STRATEGY HANDLERS
+// ─────────────────────────────────────────────────────────────
+
+async function loadCareerOptimization() {
+  try {
+    const res = await fetch('/api/career/optimization');
+    const json = await res.json();
+    if (!json.success || !json.data) return;
+
+    const data = json.data;
+
+    // 1. Render Fit Calibration Table
+    const calibEl = document.getElementById('opt-calibration-table');
+    if (calibEl && data.fitCalibration) {
+      let calibHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 11px;">';
+      calibHtml += '<tr style="border-bottom: 1px solid var(--db-card-border); color: var(--db-gray-text); text-align: left;"><th style="padding: 4px 0;">Bucket</th><th>Pred.</th><th>Obs.</th><th>Delta</th><th>Status</th></tr>';
+      data.fitCalibration.forEach(b => {
+        const deltaColor = b.delta > 10 ? '#10b981' : (b.delta < -10 ? '#ff453a' : '#fff');
+        calibHtml += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <td style="padding: 4px 0; font-weight: 600; color: #fff;">${b.bucketLabel}</td>
+            <td>${b.predictedConversionRate}%</td>
+            <td>${b.totalApplications > 0 ? b.observedConversionRate + '%' : 'N/A'}</td>
+            <td style="color: ${deltaColor}; font-weight: 700;">${b.totalApplications > 0 ? (b.delta > 0 ? '+' : '') + b.delta + '%' : '-'}</td>
+            <td><span style="font-size: 10px; color: ${b.confidence === 'INSUFFICIENT_DATA' ? 'var(--db-gray-text)' : '#10b981'};">[${b.confidence}]</span></td>
+          </tr>
+        `;
+      });
+      calibHtml += '</table>';
+      calibEl.innerHTML = calibHtml;
+    }
+
+    // 2. Render Channel & Domain Insights
+    const channelEl = document.getElementById('opt-channel-insights');
+    if (channelEl) {
+      const allInsights = [...(data.channelInsights || []), ...(data.domainInsights || [])];
+      if (allInsights.length === 0) {
+        channelEl.innerHTML = '<div style="color: var(--db-gray-text);">Dataset in baseline (osservazioni &lt; 10). Nessun bias di canale o dominio attivo.</div>';
+      } else {
+        let chHtml = '<div style="display: flex; flex-direction: column; gap: 6px;">';
+        allInsights.slice(0, 3).forEach(ins => {
+          chHtml += `
+            <div style="background: rgba(255,255,255,0.03); padding: 6px 8px; border-radius: 4px; border-left: 3px solid #10b981;">
+              <div style="font-weight: 600; color: #fff; font-size: 11px;">${escapeHtml(ins.segment)} (${escapeHtml(ins.recommendation)})</div>
+              <div style="font-size: 11px; color: var(--db-gray-text);">${escapeHtml(ins.explanation)}</div>
+            </div>
+          `;
+        });
+        chHtml += '</div>';
+        channelEl.innerHTML = chHtml;
+      }
+    }
+
+    // 3. Render Adaptation Proposals
+    const adaptEl = document.getElementById('opt-adaptations-list');
+    if (adaptEl) {
+      const props = data.adaptationProposals || [];
+      if (props.length === 0) {
+        adaptEl.innerHTML = '<div style="color: var(--db-gray-text);">Nessuna proposta di modifica al modello. Parametri in configurazione standard.</div>';
+      } else {
+        let propHtml = '<div style="display: flex; flex-direction: column; gap: 6px;">';
+        props.slice(0, 3).forEach(p => {
+          propHtml += `
+            <div style="background: rgba(255,255,255,0.03); padding: 6px 8px; border-radius: 4px; border-left: 3px solid #f59e0b;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600; color: #fff; font-size: 11px;">[${p.confidence}] ${escapeHtml(p.dimension)}</span>
+                <span style="font-size: 10px; color: #f59e0b;">${escapeHtml(p.status)}</span>
+              </div>
+              <div style="font-size: 11px; color: var(--db-gray-text); margin-top: 2px;">${escapeHtml(p.rationale)}</div>
+            </div>
+          `;
+        });
+        propHtml += '</div>';
+        adaptEl.innerHTML = propHtml;
+      }
+    }
+  } catch (err) {
+    console.error('Error loading career optimization:', err);
+  }
+}
+
+async function runOptimizationPipeline() {
+  try {
+    const res = await fetch('/api/career/optimization/run', { method: 'POST' });
+    const json = await res.json();
+    if (json.success) {
+      alert('✅ Pipeline di Ottimizzazione eseguita con successo!');
+      loadCareerOptimization();
+      loadCareerDashboard();
+    } else {
+      alert('❌ Errore durante l\'ottimizzazione: ' + json.error);
+    }
+  } catch (err) {
+    alert('Errore: ' + err.message);
+  }
+}
+
 
 

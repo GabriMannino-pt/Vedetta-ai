@@ -1093,6 +1093,111 @@ export interface CareerExecutionMetrics {
   opportunityLeakageCount: number; // fit >= 80, no app, active deadline
 }
 
+// ─────────────────────────────────────────────────────────────
+// 📈 CAREER-001.9 — ADAPTIVE CAREER OPTIMIZATION & STRATEGY TYPES
+// ─────────────────────────────────────────────────────────────
+
+export type CareerOptimizationStatus =
+  | 'INSUFFICIENT_DATA'
+  | 'OBSERVATIONAL'
+  | 'HIGH_CONFIDENCE'
+  | 'ACTIVE'
+  | 'SUPERSEDED';
+
+export type CareerOptimizationDimension =
+  | 'FIT_CALIBRATION'
+  | 'CHANNEL'
+  | 'DOMAIN'
+  | 'EVIDENCE'
+  | 'PROPOSAL_STRATEGY'
+  | 'APPLICATION_PRIORITY'
+  | 'EXPECTED_VALUE';
+
+export type CareerOptimizationRecommendation =
+  | 'NO_CHANGE'
+  | 'INCREASE_PRIORITY'
+  | 'DECREASE_PRIORITY'
+  | 'PREFER_CHANNEL'
+  | 'PREFER_EVIDENCE'
+  | 'PREFER_DOMAIN'
+  | 'ADJUST_STRATEGY'
+  | 'RECALIBRATE_SCORE';
+
+export interface CareerOptimizationInsight {
+  id?: number;
+  dimension: CareerOptimizationDimension;
+  segment: string;
+  metric: string;
+  observedValue: number;
+  baselineValue: number;
+  delta: number;
+  sampleSize: number;
+  confidence: CareerOptimizationStatus;
+  status: 'ACTIVE' | 'SUPERSEDED';
+  recommendation: CareerOptimizationRecommendation;
+  explanation: string;
+  algorithmVersion: number;
+  generatedAt?: string;
+}
+
+export interface CareerExpectedValue {
+  id?: number;
+  opportunityId: number;
+  fitProbability: number;
+  responseProbability: number;
+  interviewProbability: number;
+  offerProbability: number;
+  winProbability: number;
+  expectedRevenue: number;
+  expectedTimeCostHours: number;
+  expectedValue: number;
+  confidence: CareerOptimizationStatus;
+  algorithmVersion: number;
+  calculatedAt?: string;
+}
+
+export interface CareerAdaptationProposal {
+  id?: number;
+  dimension: CareerOptimizationDimension;
+  currentValue: string;
+  proposedValue: string;
+  rationale: string;
+  supportingInsightsJson?: string | null;
+  sampleSize: number;
+  confidence: CareerOptimizationStatus;
+  expectedImpact: string;
+  status: 'PROPOSED' | 'REVIEWED' | 'REJECTED';
+  createdAt?: string;
+  reviewedAt?: string | null;
+}
+
+export interface CareerOptimizationRun {
+  id?: number;
+  algorithmVersion: number;
+  startedAt: string;
+  completedAt?: string | null;
+  observationsCount: number;
+  insightsGenerated: number;
+  adaptationsProposed: number;
+  status: 'RUNNING' | 'COMPLETED' | 'FAILED';
+  metadataJson?: string | null;
+}
+
+export interface CareerOptimizationSnapshot {
+  totalObservations: number;
+  confidenceLevel: CareerOptimizationStatus;
+  fitCalibration: any[];
+  channelInsights: CareerOptimizationInsight[];
+  domainInsights: CareerOptimizationInsight[];
+  evidenceInsights: CareerOptimizationInsight[];
+  proposalInsights: CareerOptimizationInsight[];
+  adaptationProposals: CareerAdaptationProposal[];
+  topExpectedValues: CareerExpectedValue[];
+  lastRun?: CareerOptimizationRun | null;
+  calculatedAt: string;
+}
+
+
 
 
 

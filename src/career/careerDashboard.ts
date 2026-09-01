@@ -137,6 +137,10 @@ export function getCareerDashboard(): CareerDashboardSummary {
     const { calculateExecutionMetrics } = require('./careerExecutionMetrics');
     nextActions = getNextActions().slice(0, 10);
     executionMetrics = calculateExecutionMetrics();
+  let optimization: any = null;
+  try {
+    const { getOptimizationSnapshot } = require('./careerOptimization');
+    optimization = getOptimizationSnapshot();
   } catch (e: any) {
     // Graceful fallback
   }
@@ -153,6 +157,7 @@ export function getCareerDashboard(): CareerDashboardSummary {
     pendingApprovalsCount,
     nextActions,
     executionMetrics,
+    optimization,
     funnel,
     metrics,
     alerts,

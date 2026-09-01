@@ -210,6 +210,14 @@ export function initDb(): void {
     console.warn('[DB] Migrazioni 1.8 warning:', e.message);
   }
 
+  // Migrazioni Vedetta 1.9 (Adaptive Career Optimization & Strategy Intelligence)
+  try {
+    const { runMigrations1_9 } = require('./migrations_1_9');
+    runMigrations1_9(db);
+  } catch (e: any) {
+    console.warn('[DB] Migrazioni 1.9 warning:', e.message);
+  }
+
   console.log(`[DB] ✅ Database inizializzato: ${DB_PATH}`);
 }
 

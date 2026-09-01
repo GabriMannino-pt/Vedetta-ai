@@ -1041,6 +1041,99 @@ app.post('/api/career/execution/refresh', (req, res) => {
   }
 });
 
+// 40. GET /api/career/optimization
+app.get('/api/career/optimization', (req, res) => {
+  try {
+    const { getOptimizationSnapshot } = require('./career/careerOptimization');
+    const snapshot = getOptimizationSnapshot();
+    res.json({ success: true, data: snapshot });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 41. GET /api/career/optimization/insights
+app.get('/api/career/optimization/insights', (req, res) => {
+  try {
+    const { getDb } = require('./storage/db');
+    const db = getDb();
+    const rows = db.prepare("SELECT * FROM career_optimization_insights WHERE status = 'ACTIVE' ORDER BY sample_size DESC").all();
+    res.json({ success: true, count: rows.length, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 42. GET /api/career/optimization/calibration
+app.get('/api/career/optimization/calibration', (req, res) => {
+  try {
+    const { calculateFitCalibration } = require('./career/adaptiveCalibration');
+    const calib = calculateFitCalibration();
+    res.json({ success: true, data: calib });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 43. GET /api/career/optimization/expected-values
+app.get('/api/career/optimization/expected-values', (req, res) => {
+  try {
+    const { getDb } = require('./storage/db');
+    const db = getDb();
+    const rows = db.prepare('SELECT * FROM career_expected_values ORDER BY expected_value DESC').all();
+    res.json({ success: true, count: rows.length, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 44. GET /api/career/optimization/strategy/:opportunityId
+app.get('/api/career/optimization/strategy/:opportunityId', (req, res) => {
+  try {
+    const { getRecommendedStrategy } = require('./career/adaptiveStrategy');
+    const id = parseInt(req.params.opportunityId, 10);
+    const strategy = getRecommendedStrategy(id);
+    res.json({ success: true, data: strategy });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 45. GET /api/career/optimization/adaptations
+app.get('/api/career/optimization/adaptations', (req, res) => {
+  try {
+    const { getDb } = require('./storage/db');
+    const db = getDb();
+    const rows = db.prepare('SELECT * FROM career_adaptation_proposals ORDER BY created_at DESC').all();
+    res.json({ success: true, count: rows.length, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 46. POST /api/career/optimization/run
+app.post('/api/career/optimization/run', (req, res) => {
+  try {
+    const { runCareerOptimization } = require('./career/careerOptimization');
+    const snapshot = runCareerOptimization();
+    res.json({ success: true, message: 'Career optimization completed successfully', data: snapshot });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 47. GET /api/career/optimization/runs
+app.get('/api/career/optimization/runs', (req, res) => {
+  try {
+    const { getDb } = require('./storage/db');
+    const db = getDb();
+    const rows = db.prepare('SELECT * FROM career_optimization_runs ORDER BY started_at DESC LIMIT 20').all();
+    res.json({ success: true, count: rows.length, data: rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 4. File Statici: Serviamo la Dashboard Web (HTML/JS)
 app.use(express.static(path.join(__dirname, '..', 'src', 'public')));
 

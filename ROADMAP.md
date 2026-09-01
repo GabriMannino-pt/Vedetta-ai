@@ -56,5 +56,5 @@
 - [x] **CAREER-001.6** Priority & Expected Value Scorer (Outcome Tracking, Learning & Feedback Loop)
 - [x] **CAREER-001.7** Career Intelligence Dashboard & Operational Workflow
 - [x] **CAREER-001.8** Career Execution Engine & Human-in-the-Loop Automation
-- [ ] **CAREER-001.9** LinkedIn Integration Layer
-- [ ] **CAREER-001.10** Upwork Integration Layer
+- [x] **CAREER-001.9** Adaptive Career Optimization & Strategy Intelligence
+- [ ] **CAREER-002.0** Career External Integrations Layer (Upwork & LinkedIn)
