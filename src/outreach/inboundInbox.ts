@@ -120,8 +120,8 @@ function classifyReplyIntent(text: string, subject: string): {
   ) {
     return {
       intent: 'OBJECTION_STATUS_QUO',
-      sentiment: 0.3,
-      proposedAction: 'Obiezione status quo rilevata. Azione consigliata: Invia follow-up di cortesia con case study DanceFlow per evidenziare il risparmio di tempo (iscrizioni e pagamenti automatizzati) o archivia per ricontatto pre-stagionale.'
+      sentiment: 0.2,
+      proposedAction: 'Obiezione status quo (soddisfatti del metodo attuale). Azione: Archivia prospect ed evita ricontatti per non risultare insistenti o pesanti.'
     };
   }
 
