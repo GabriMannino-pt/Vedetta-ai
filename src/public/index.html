@@ -27,6 +27,10 @@
         <i data-lucide="check-square"></i>
         <span>Qualified Leads</span>
       </button>
+      <button class="menu-item" id="menu-replies" onclick="switchSidebarView('replies')">
+        <i data-lucide="message-square"></i>
+        <span>Replies &amp; Bounces</span>
+      </button>
       <button class="menu-item" id="menu-career" onclick="switchSidebarView('career')">
         <i data-lucide="briefcase"></i>
         <span>Career OS</span>
@@ -280,6 +284,84 @@
               </tr>
             </thead>
             <tbody id="list-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    <!-- VIEW 3: REPLIES & BOUNCES INBOX -->
+    <div id="view-replies" class="view-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h2 style="font-size: 22px; font-weight: 700; color: #fff; margin: 0;">Inbox Risposte &amp; Qualità Email</h2>
+            <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600;">IMAP Live Connected</span>
+          </div>
+          <p style="font-size: 13px; color: var(--db-gray-text); margin: 4px 0 0 0;">Monitoraggio in tempo reale della casella growthstudio.ai.sales@gmail.com, classificazione intenti e pulizia indirizzi respinti</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-secondary" id="btn-sync-inbox" onclick="syncRepliesLive()" style="padding: 7px 14px; font-size: 13px; display: flex; align-items: center; gap: 6px; background: #0A84FF; color: #fff; border: none; border-radius: 8px; cursor: pointer;">
+            <i data-lucide="refresh-cw"></i> Sincronizza Gmail (IMAP)
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Mini Strip -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px;">
+        <div class="stat-card" style="padding: 16px; border-radius: 12px; background: var(--db-card-bg); border: 1px solid var(--db-card-border);">
+          <span style="font-size: 12px; color: var(--db-gray-text);">💬 Risposte Ricevute</span>
+          <div style="font-size: 24px; font-weight: 700; color: #fff; margin-top: 4px;" id="kpi-replies-count">0</div>
+        </div>
+        <div class="stat-card" style="padding: 16px; border-radius: 12px; background: var(--db-card-bg); border: 1px solid var(--db-card-border);">
+          <span style="font-size: 12px; color: var(--db-gray-text);">🎯 Lead Caldi / Demo</span>
+          <div style="font-size: 24px; font-weight: 700; color: #10b981; margin-top: 4px;" id="kpi-positive-count">0</div>
+        </div>
+        <div class="stat-card" style="padding: 16px; border-radius: 12px; background: var(--db-card-bg); border: 1px solid var(--db-card-border);">
+          <span style="font-size: 12px; color: var(--db-gray-text);">🛡️ Obiezioni / Nurturing</span>
+          <div style="font-size: 24px; font-weight: 700; color: #f59e0b; margin-top: 4px;" id="kpi-objections-count">0</div>
+        </div>
+        <div class="stat-card" style="padding: 16px; border-radius: 12px; background: var(--db-card-bg); border: 1px solid var(--db-card-border);">
+          <span style="font-size: 12px; color: var(--db-gray-text);">🚨 Email Respinte / Bounces</span>
+          <div style="font-size: 24px; font-weight: 700; color: #ef4444; margin-top: 4px;" id="kpi-bounces-count">0</div>
+        </div>
+      </div>
+
+      <!-- Tab Switcher (Replies vs Bounces) -->
+      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--db-card-border); margin-bottom: 20px;">
+        <button class="tab-btn active" id="tab-inbox-replies" onclick="switchInboxSubTab('replies')">
+          💬 Risposte Ricevute (<span id="tab-replies-count-span">0</span>)
+        </button>
+        <button class="tab-btn" id="tab-inbox-bounces" onclick="switchInboxSubTab('bounces')">
+          🚨 Bounces &amp; Email Non Valide (<span id="tab-bounces-count-span">0</span>)
+        </button>
+      </div>
+
+      <!-- Content 1: Replies List -->
+      <div id="subtab-inbox-replies" class="inbox-subtab-content" style="display: block;">
+        <div id="inbox-replies-container" style="display: grid; gap: 14px;">
+          <!-- Popolato dinamicamente da app.js -->
+        </div>
+      </div>
+
+      <!-- Content 2: Bounces Table -->
+      <div id="subtab-inbox-bounces" class="inbox-subtab-content" style="display: none;">
+        <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+          <p style="margin: 0; font-size: 13px; color: #fca5a5;">
+            <strong>🛡️ Protezione Deliverability:</strong> Gli indirizzi email non validi (errori di scraping, domini inesistenti, caselle piene o PEC) sono stati automaticamente contrassegnati come <code>BOUNCED</code> nel database per impedire invii futuri e proteggere la reputazione dell'account Gmail.
+          </p>
+        </div>
+        <div class="table-wrapper">
+          <table class="leads-table">
+            <thead>
+              <tr>
+                <th>Destinatario Fallito</th>
+                <th>Tipologia Errore</th>
+                <th>Azienda / Prospect</th>
+                <th>Oggetto Messaggio</th>
+                <th>Rilevato il</th>
+                <th>Stato Governance</th>
+              </tr>
+            </thead>
+            <tbody id="bounces-table-body"></tbody>
           </table>
         </div>
       </div>

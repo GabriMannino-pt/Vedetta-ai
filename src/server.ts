@@ -166,12 +166,99 @@ app.post('/api/outreach/kill-switch', (req, res) => {
   res.json({ kill_switch_active: isEmergencyKillSwitchActive });
 });
 
-/** 5. GET /api/outreach/stats — Metriche Live CRM & Outreach */
+/** 6. GET /api/outreach/replies — Lista risposte e bounce reali dalla casella Gmail */
+app.get('/api/outreach/replies', async (req, res) => {
+  try {
+    const { getInboxReplies, getEmailBounces, syncGmailInbox } = require('./outreach/inboundInbox');
+    let replies = getInboxReplies();
+    let bounces = getEmailBounces();
+
+    // Se il database non ha ancora risposte sincronizzate, tenta un sync iniziale
+    if (replies.length === 0 && bounces.length === 0) {
+      try {
+        await syncGmailInbox(30);
+        replies = getInboxReplies();
+        bounces = getEmailBounces();
+      } catch (syncErr: any) {
+        console.warn('[API] Warning auto-sync inbox:', syncErr.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      count: replies.length,
+      replies,
+      data: replies,
+      items: replies,
+      bounces_count: bounces.length,
+      bounces
+    });
+  } catch (err: any) {
+    console.error('[API] Errore get replies:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** 7. POST /api/outreach/replies/sync — Sincronizzazione forzata in tempo reale via IMAP */
+app.post('/api/outreach/replies/sync', async (req, res) => {
+  try {
+    const { syncGmailInbox, getInboxReplies, getEmailBounces } = require('./outreach/inboundInbox');
+    const result = await syncGmailInbox(50);
+    const replies = getInboxReplies();
+    const bounces = getEmailBounces();
+
+    res.json({
+      success: true,
+      message: `Sincronizzazione completata: ${result.syncedReplies} nuove risposte, ${result.syncedBounces} nuovi bounce identificati.`,
+      stats: result,
+      replies,
+      bounces
+    });
+  } catch (err: any) {
+    console.error('[API] Errore sync inbox:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** 8. GET /api/outreach/bounces — Lista email respinte / non recapitate per pulizia */
+app.get('/api/outreach/bounces', (req, res) => {
+  try {
+    const { getEmailBounces } = require('./outreach/inboundInbox');
+    const bounces = getEmailBounces();
+    res.json({
+      success: true,
+      count: bounces.length,
+      bounces,
+      data: bounces
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** 9. POST /api/outreach/replies/:id/action — Gestione stato azione su risposta */
+app.post('/api/outreach/replies/:id/action', (req, res) => {
+  try {
+    const { updateReplyActionStatus } = require('./outreach/inboundInbox');
+    const id = parseInt(req.params.id, 10);
+    const { status = 'ACTED' } = req.body;
+    updateReplyActionStatus(id, status);
+    res.json({ success: true, message: `Azione registrata per risposta #${id}` });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/** 10. GET /api/outreach/stats — Metriche Live CRM & Outreach */
 app.get('/api/outreach/stats', async (req, res) => {
   try {
     const { getPendingOutreachList, getSentOutreachList } = require('./storage/cloudStore');
+    const { getInboxReplies, getEmailBounces } = require('./outreach/inboundInbox');
+
     const pending = await getPendingOutreachList();
     const sent = await getSentOutreachList();
+    const replies = getInboxReplies();
+    const bounces = getEmailBounces();
 
     const dfCount = pending.filter((p: any) => (p.mode || '').includes('danceflow')).length + sent.filter((s: any) => (s.mode || s.product || '').includes('danceflow')).length;
     const vedettaCount = pending.filter((p: any) => (p.mode || '').includes('vedetta')).length + sent.filter((s: any) => (s.mode || s.product || '').includes('vedetta')).length;
@@ -187,7 +274,8 @@ app.get('/api/outreach/stats', async (req, res) => {
       sent_total: sent.length,
       total_pending: pending.length,
       total_sent: sent.length,
-      total_replies: 0,
+      total_replies: replies.length,
+      total_bounces: bounces.length,
       estimated_pipeline: `€${openPipeline.toLocaleString('it-IT')}`,
       kill_switch_active: isEmergencyKillSwitchActive
     });

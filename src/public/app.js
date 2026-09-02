@@ -46,6 +46,7 @@ function switchSidebarView(viewName) {
   const titles = {
     overview: 'Overview',
     leads: 'Qualified Leads Pipeline',
+    replies: 'Replies & Email Deliverability',
     career: 'Career Intelligence OS',
     settings: 'Settings'
   };
@@ -54,6 +55,8 @@ function switchSidebarView(viewName) {
   // Rinfresca i dati
   if (viewName === 'career') {
     loadCareerDashboard();
+  } else if (viewName === 'replies') {
+    loadRepliesView();
   } else {
     refreshLeads();
   }
@@ -1222,5 +1225,155 @@ async function runOptimizationPipeline() {
     }
   } catch (err) {
     alert('Errore: ' + err.message);
+  }
+}
+
+// ==========================================
+// REPLIES & BOUNCES INBOX (GMAIL IMAP)
+// ==========================================
+
+function switchInboxSubTab(tabName) {
+  document.querySelectorAll('#view-replies .tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.inbox-subtab-content').forEach(c => c.style.display = 'none');
+  
+  document.getElementById(`tab-inbox-${tabName}`).classList.add('active');
+  document.getElementById(`subtab-inbox-${tabName}`).style.display = 'block';
+}
+
+async function loadRepliesView() {
+  try {
+    const res = await fetch('/api/outreach/replies');
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || 'Errore nel caricamento delle risposte');
+
+    const replies = json.replies || [];
+    const bounces = json.bounces || [];
+
+    // Aggiorna KPI
+    document.getElementById('kpi-replies-count').innerText = replies.length;
+    document.getElementById('kpi-positive-count').innerText = replies.filter(r => r.intent_classification === 'INTERESTED').length;
+    document.getElementById('kpi-objections-count').innerText = replies.filter(r => r.intent_classification === 'OBJECTION_STATUS_QUO').length;
+    document.getElementById('kpi-bounces-count').innerText = bounces.length;
+
+    document.getElementById('tab-replies-count-span').innerText = replies.length;
+    document.getElementById('tab-bounces-count-span').innerText = bounces.length;
+
+    // Render Risposte
+    const container = document.getElementById('inbox-replies-container');
+    if (replies.length === 0) {
+      container.innerHTML = `
+        <div style="padding: 30px; text-align: center; background: var(--db-card-bg); border: 1px solid var(--db-card-border); border-radius: 12px; color: var(--db-gray-text);">
+          Nessuna risposta rilevata al momento. Clicca su "Sincronizza Gmail (IMAP)" per controllare nuovi messaggi in arrivo.
+        </div>
+      `;
+    } else {
+      const intentBadges = {
+        INTERESTED: { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: 'rgba(16, 185, 129, 0.3)', label: '🎯 Lead Interessato / Demo' },
+        OBJECTION_STATUS_QUO: { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)', label: '🛡️ Obiezione: Già coperti' },
+        QUESTION: { bg: 'rgba(10, 132, 255, 0.15)', color: '#0A84FF', border: 'rgba(10, 132, 255, 0.3)', label: '❓ Richiesta Info / Prezzi' },
+        OUT_OF_OFFICE: { bg: 'rgba(156, 163, 175, 0.15)', color: '#9ca3af', border: 'rgba(156, 163, 175, 0.3)', label: '🏖️ Fuori Ufficio / Ferie' },
+        NOT_INTERESTED: { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.3)', label: '❌ Non Interessato' },
+        OTHER: { bg: 'rgba(156, 163, 175, 0.1)', color: '#d1d5db', border: 'rgba(156, 163, 175, 0.2)', label: '💬 Altro' }
+      };
+
+      container.innerHTML = replies.map(r => {
+        const badge = intentBadges[r.intent_classification] || intentBadges.OTHER;
+        const dateStr = new Date(r.received_at).toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+        return `
+          <div style="background: var(--db-card-bg); border: 1px solid var(--db-card-border); border-radius: 12px; padding: 18px; display: grid; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong style="font-size: 15px; color: #fff;">${r.company_name || r.from_name}</strong>
+                  <span style="font-size: 11px; padding: 2px 8px; border-radius: 10px; background: ${badge.bg}; color: ${badge.color}; border: 1px solid ${badge.border}; font-weight: 600;">
+                    ${badge.label}
+                  </span>
+                  <span style="font-size: 11px; color: var(--db-gray-text); text-transform: uppercase;">${r.product_key || 'danceflow'}</span>
+                </div>
+                <div style="font-size: 12px; color: var(--db-gray-text); margin-top: 2px;">
+                  Da: <span style="color: #d1d5db;">${r.from_name}</span> &lt;${r.from_address}&gt; · Oggetto: <em>${r.subject}</em>
+                </div>
+              </div>
+              <span style="font-size: 11px; color: var(--db-gray-text);">${dateStr}</span>
+            </div>
+
+            <div style="background: rgba(0, 0, 0, 0.25); border-left: 3px solid ${badge.color}; padding: 12px 14px; border-radius: 6px; font-size: 13px; color: #e5e7eb; white-space: pre-wrap; line-height: 1.5;">
+              ${r.body_text}
+            </div>
+
+            <div style="background: rgba(10, 132, 255, 0.08); border: 1px dashed rgba(10, 132, 255, 0.25); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #93c5fd; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <strong>💡 Prossima Azione Consigliata:</strong> ${r.proposed_action}
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button onclick="markReplyActed(${r.id})" style="background: #10b981; color: #fff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; font-weight: 600;">
+                  ✓ Segna come Gestita
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Bounces Table
+    const bouncesTbody = document.getElementById('bounces-table-body');
+    if (bounces.length === 0) {
+      bouncesTbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--db-gray-text); padding: 20px;">Nessuna email respinta rilevata.</td></tr>`;
+    } else {
+      bouncesTbody.innerHTML = bounces.map(b => {
+        const dateStr = new Date(b.detected_at).toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        let typeBadge = `<span style="padding: 2px 6px; border-radius: 8px; font-size: 11px; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-weight: 600;">${b.bounce_type}</span>`;
+
+        return `
+          <tr>
+            <td><strong style="color: #fca5a5;">${b.failed_recipient}</strong></td>
+            <td>${typeBadge}</td>
+            <td>${b.company_name || '—'}</td>
+            <td style="font-size: 12px; color: var(--db-gray-text);">${b.raw_subject}</td>
+            <td style="font-size: 12px; color: var(--db-gray-text);">${dateStr}</td>
+            <td><span style="font-size: 11px; color: #10b981;">🛡️ Escluso da invii</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+  } catch (err) {
+    console.error('Error loading replies:', err);
+  }
+}
+
+async function syncRepliesLive() {
+  const btn = document.getElementById('btn-sync-inbox');
+  if (btn) btn.innerHTML = '⏳ Sincronizzazione IMAP...';
+  try {
+    const res = await fetch('/api/outreach/replies/sync', { method: 'POST' });
+    const json = await res.json();
+    if (json.success) {
+      alert(`✅ Sincronizzazione completata!\n${json.message}`);
+      loadRepliesView();
+    } else {
+      alert('❌ Errore sync: ' + json.error);
+    }
+  } catch (err) {
+    alert('Errore: ' + err.message);
+  } finally {
+    if (btn) btn.innerHTML = '<i data-lucide="refresh-cw"></i> Sincronizza Gmail (IMAP)';
+    if (window.lucide) window.lucide.createIcons();
+  }
+}
+
+async function markReplyActed(id) {
+  try {
+    await fetch(`/api/outreach/replies/${id}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'ACTED' })
+    });
+    loadRepliesView();
+  } catch (err) {
+    console.error(err);
   }
 }
