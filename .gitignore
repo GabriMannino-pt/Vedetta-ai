@@ -6,4 +6,12 @@ dist/
 *.db-journal
 *firebase-adminsdk*.json
 serviceAccountKey.json
+.vscode/
 
+# Private task trackers, pipeline notes & scratch
+LAVORO.MD
+COSE_DA_FARE.md
+project_structure.txt
+scratch/
+*.pdf
+*.log
