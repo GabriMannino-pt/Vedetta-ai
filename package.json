@@ -4,7 +4,7 @@
   "description": "Automated lead scouting system for B2B automation services. Monitors Reddit and Upwork for real buying intent.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "scout": "npm run build && npm start",

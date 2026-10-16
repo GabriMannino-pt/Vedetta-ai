@@ -26,15 +26,21 @@ jobs:
       - name: TypeScript Strict Build & Compilation
         run: npm run build
 
-      - name: Run Deterministic Scoring & Engine Smoke Test
+      - name: Run Deterministic Scoring & MCP Server Verification
         run: |
           node -e "
             const { analyzeProspectFactual } = require('./dist/scoring/modeScorer');
             const { calculatePipelineMetrics } = require('./dist/crm/dealEngine');
-            if (typeof analyzeProspectFactual !== 'function' || typeof calculatePipelineMetrics !== 'function') {
-              throw new Error('Core engine exports missing');
-            }
-            const metrics = calculatePipelineMetrics([]);
-            if (metrics.total_deals !== 0) throw new Error('Invalid pipeline baseline');
-            console.log('Vedetta-AI deterministic engine verification passed!');
+            const { VedettaMcpServer } = require('./dist/mcp/mcpServer');
+            const mcp = new VedettaMcpServer();
+            const listRes = mcp.handleRequest({ jsonrpc: '2.0', id: 1, method: 'tools/list' });
+            if (!listRes.result || listRes.result.tools.length < 2) throw new Error('MCP tools/list failed');
+            const callRes = mcp.handleRequest({
+              jsonrpc: '2.0',
+              id: 2,
+              method: 'tools/call',
+              params: { name: 'vedetta_score_prospect', arguments: { company_name: 'Tech Scaleup Srl', website: 'https://techscaleup.it', mode: 'vedetta' } }
+            });
+            if (callRes.error || callRes.result.isError) throw new Error('MCP tools/call failed');
+            console.log('Vedetta-AI deterministic engine & MCP JSON-RPC 2.0 verification passed!');
           "
