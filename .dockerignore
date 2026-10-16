@@ -1,0 +1,8 @@
+node_modules
+dist
+.data
+.git
+.env
+*.json.bak
+*firebase-adminsdk*.json
+LAVORO.MD

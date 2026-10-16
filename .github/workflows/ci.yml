@@ -1,0 +1,40 @@
+name: Vedetta-AI CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript Strict Build & Compilation
+        run: npm run build
+
+      - name: Run Deterministic Scoring & Engine Smoke Test
+        run: |
+          node -e "
+            const { analyzeProspectFactual } = require('./dist/scoring/modeScorer');
+            const { calculatePipelineMetrics } = require('./dist/crm/dealEngine');
+            if (typeof analyzeProspectFactual !== 'function' || typeof calculatePipelineMetrics !== 'function') {
+              throw new Error('Core engine exports missing');
+            }
+            const metrics = calculatePipelineMetrics([]);
+            if (metrics.total_deals !== 0) throw new Error('Invalid pipeline baseline');
+            console.log('Vedetta-AI deterministic engine verification passed!');
+          "
