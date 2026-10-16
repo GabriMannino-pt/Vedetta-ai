@@ -64,6 +64,8 @@ flowchart TD
    - Built-in rate limiting and graceful error handling against third-party API throttling.
 4. **Structured JSON Output Parsing:**
    - Strict schema enforcement on Gemini responses ensuring reliable extraction of scores, identified pain points, and commercial pitches.
+5. **Model Context Protocol (MCP) JSON-RPC 2.0 Server (`src/mcp/mcpServer.ts`):**
+   - Exposes Vedetta's deterministic lead scoring (`vedetta_score_prospect`) and CRM pipeline telemetry (`vedetta_compute_pipeline_kpis`) over the standard MCP protocol (`initialize`, `tools/list`, `tools/call`, `resources/list`), enabling seamless integration with Claude Desktop, Cursor, and LangGraph agents via local `stdio` or authenticated remote `HTTP/SSE`.
 
 ---
 
